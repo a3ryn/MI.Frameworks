@@ -1,0 +1,3 @@
+﻿		[DataMapping("$(ColumnName)", $(ColumnIndex))]
+		public $(Type) $(Name) { get; set; }
+		

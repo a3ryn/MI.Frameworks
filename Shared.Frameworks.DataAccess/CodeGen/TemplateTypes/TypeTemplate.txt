@@ -1,0 +1,12 @@
+﻿using System;
+using Shared.Core.Common.DataAccess;
+
+/* Auto-generated code [Date generated: $(Date)]. Do not change manually. */
+
+namespace $(Namespace)
+{
+	public class $(Typename)
+	{
+@Properties
+	}
+}
