@@ -4,6 +4,8 @@ using System.IO;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 
 namespace Shared.Core.Common.Serialization
 {
@@ -64,5 +66,23 @@ namespace Shared.Core.Common.Serialization
         {
             File.WriteAllText(path, data);
         }
+
+        #region  JSON Serialization
+        private static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
+        {
+            //TODO - perhaps read from some configuration file
+            Formatting = Newtonsoft.Json.Formatting.Indented,
+            ContractResolver = new CamelCasePropertyNamesContractResolver(),
+            ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
+            TypeNameHandling = TypeNameHandling.All,
+        };
+
+        public static string ToJson<T>(this T r) =>
+            JsonConvert.SerializeObject(r, SerializerSettings);
+
+        public static T FromJson<T>(this string s) =>
+            JsonConvert.DeserializeObject<T>(s, SerializerSettings);
+
+        #endregion
     }
 }

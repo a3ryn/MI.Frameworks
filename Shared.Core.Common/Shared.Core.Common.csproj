@@ -37,6 +37,10 @@
       <HintPath>..\..\packages\log4net.2.0.3\lib\net40-full\log4net.dll</HintPath>
       <Private>True</Private>
     </Reference>
+    <Reference Include="Newtonsoft.Json, Version=9.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
+      <HintPath>..\packages\Newtonsoft.Json.9.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.ComponentModel.Composition" />
     <Reference Include="System.ComponentModel.DataAnnotations" />
@@ -49,10 +53,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="auxfunc.cs" />
+    <Compile Include="Func\auxfunc.cs" />
     <Compile Include="Caching\ICache.cs" />
-    <Compile Include="corefunc.cs" />
+    <Compile Include="Func\corefunc.cs" />
+    <Compile Include="CustomTypes\DirectedPair.cs" />
     <Compile Include="CustomTypes\Fraction.cs" />
+    <Compile Include="CustomTypes\Pair.cs" />
+    <Compile Include="CustomTypes\Result.cs" />
     <Compile Include="DataAccess\DataMappingAttribute.cs" />
     <Compile Include="DataAccess\IDataAccess.cs" />
     <Compile Include="Extensions\EnumerableExt.cs" />
@@ -69,10 +76,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
+    <None Include="Shared.Core.Common.nuspec" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Attributes\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

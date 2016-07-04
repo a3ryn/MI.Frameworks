@@ -34,5 +34,20 @@ namespace Shared.Core.Common
         public static IEnumerable<Tuple<bool, bool,bool>> bool3CrossJoin() =>
             crossJoin(BoolValues, BoolValues,BoolValues);
 
+        public static Pair<T> pair<T>(T first, T second) => new Pair<T>(first, second);
+
+        public static T reverseCond<T>(bool rev, T obj1, T obj2) => rev ? obj2 : obj1;
+
+        public static long elapsedMs(Action a)
+        {
+            var s = new Stopwatch();
+            s.Start();
+            a();
+            s.Stop();
+            return s.ElapsedMilliseconds;
+        }
+
+        public static bool isNullOrEmpty(this string s) => string.IsNullOrEmpty(s);
+
     }
 }
