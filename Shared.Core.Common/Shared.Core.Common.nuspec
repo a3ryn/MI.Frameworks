@@ -12,5 +12,9 @@
     <releaseNotes>Initial release.</releaseNotes>
     <copyright>Copyright 2016</copyright>
     <tags>logging extensions serialization</tags>
+    <dependencies>
+      <dependency id="log4net" version="2.0.3" />
+      <dependency id="Newtonsoft.Json" version="9.0.1" />
+    </dependencies>
   </metadata>
 </package>
