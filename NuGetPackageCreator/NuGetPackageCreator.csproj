@@ -4,13 +4,14 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{44072D47-E0C1-41C2-B366-138C4FE01CF3}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{DA3646DC-C727-459D-9E95-F770A756369D}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Shared.Frameworks.DataAccess</RootNamespace>
-    <AssemblyName>Shared.Frameworks.DataAccess</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <RootNamespace>NuGetPackageCreator</RootNamespace>
+    <AssemblyName>NuGetPackageCreator</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -36,10 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
-    <Reference Include="System.ComponentModel.Composition" />
-    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Data.Entity" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -48,36 +46,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeGen\Helpers\CodeGenerator.cs" />
-    <Compile Include="CodeGen\Common\Enums.cs" />
-    <Compile Include="CodeGen\Common\ScriptUtilities.cs" />
-    <Compile Include="CodeGen\Common\TemplateTypeAttribute.cs" />
-    <Compile Include="CodeGen\Helpers\Helper.cs" />
-    <Compile Include="CodeGen\Common\Script.cs" />
-    <Compile Include="CodeGen\Helpers\TemplateHelper.cs" />
-    <Compile Include="CodeGen\TemplateTypes\ITemplateData.cs" />
-    <Compile Include="CodeGen\TemplateTypes\PropertyTemplate.cs" />
-    <Compile Include="CodeGen\TemplateTypes\ScriptTemplate.cs" />
-    <Compile Include="CodeGen\TemplateTypes\TypeTemplate.cs" />
-    <Compile Include="DataAdapter.cs" />
-    <Compile Include="EntityMapper.cs" />
+    <Compile Include="NuGetConfig.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Shared.Core.Common\Shared.Core.Common.csproj">
-      <Project>{df4c2915-22a1-4b8e-94d5-7622eceb063b}</Project>
-      <Name>Shared.Core.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="CodeGen\TemplateTypes\PropertyTemplate.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-    <EmbeddedResource Include="CodeGen\TemplateTypes\TypeTemplate.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
+    <None Include="App.config" />
+    <EmbeddedResource Include="Shared.Core.Common.nuspec" />
+    <EmbeddedResource Include="Shared.Frameworks.Caching.nuspec" />
     <EmbeddedResource Include="Shared.Frameworks.DataAccess.nuspec" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

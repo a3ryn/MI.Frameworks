@@ -5,12 +5,12 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("Shared.Core.Common")]
+[assembly: AssemblyTitle("NuGetPackageCreator")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("Shared.Core.Common")]
-[assembly: AssemblyCopyright("Copyright © MI 2016")]
+[assembly: AssemblyProduct("NuGetPackageCreator")]
+[assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
@@ -20,7 +20,7 @@ using System.Runtime.InteropServices;
 [assembly: ComVisible(false)]
 
 // The following GUID is for the ID of the typelib if this project is exposed to COM
-[assembly: Guid("df4c2915-22a1-4b8e-94d5-7622eceb063b")]
+[assembly: Guid("da3646dc-c727-459d-9e95-f770a756369d")]
 
 // Version information for an assembly consists of the following four values:
 //

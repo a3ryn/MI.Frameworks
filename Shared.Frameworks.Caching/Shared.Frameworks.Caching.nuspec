@@ -4,9 +4,10 @@
     <id>SharedLibs.Caching</id>
     <version>1.0.0</version>
     <title>Shared Caching Framework</title>
-    <authors>MI</authors>
-    <owners>MI</owners>
+    <authors>Mihaela Iridon</authors>
+    <owners></owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
     <description>Implementation of ICache interface from SharedLibs Common</description>
     <releaseNotes>Initial release.</releaseNotes>
     <copyright>Copyright 2016</copyright>

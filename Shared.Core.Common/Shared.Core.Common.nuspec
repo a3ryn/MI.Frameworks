@@ -4,9 +4,10 @@
     <id>SharedLibs.Common</id>
     <version>1.0.0</version>
     <title>Shared Common Utilities</title>
-    <authors>MI+</authors>
-    <owners>MI</owners>
+    <authors>Mihaela Iridon</authors>
+    <owners></owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
     <description>Collection of general-purpose utilities</description>
     <releaseNotes>Initial release.</releaseNotes>
     <copyright>Copyright 2016</copyright>

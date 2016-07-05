@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>SharedLibs.DataAccess</id>
-    <version>1.0.0</version>
+    <version>$VERSION$</version>
     <title>Generic ADO.NET Data Access</title>
     <authors>Mihaela Iridon</authors>
     <owners></owners>

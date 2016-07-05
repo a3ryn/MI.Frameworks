@@ -1,16 +1,16 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>SharedLibs.DataAccess</id>
-    <version>1.0.0</version>
-    <title>Generic ADO.NET Data Access</title>
+    <id>SharedLibs.Common</id>
+    <version>$VERSION$</version>
+    <title>Shared Common Utilities</title>
     <authors>Mihaela Iridon</authors>
     <owners></owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <licenseUrl>https://opensource.org/licenses/MIT</licenseUrl>
-    <description>General-purpose ADO.NET-based data access supporting queries of TVFs and St Proc calls, including mapping to custom-defined or auto-generated object types.</description>
+    <description>Collection of general-purpose utilities</description>
     <releaseNotes>Initial release.</releaseNotes>
     <copyright>Copyright 2016</copyright>
-    <tags>Data_Access ADONET</tags>
+    <tags>logging extensions serialization</tags>
   </metadata>
 </package>
