@@ -13,6 +13,7 @@ using System.Text;
 using Shared.Core.Common.DataAccess;
 using Shared.Core.Common.Logging;
 using Shared.Core.Common.Extensions;
+using static Shared.Core.Common.auxfunc;
 
 namespace Shared.Frameworks.DataAccess
 {
@@ -26,8 +27,8 @@ namespace Shared.Frameworks.DataAccess
             //connection strings can always be passed in with each individual request to the DataAccess framework; these are here in case we consistently go against the same DB
             static ConfigConstants()
             {
-                BasicConnStrId = ConfigurationManager.AppSettings["DataAccess.BasicConnStrName"];
-                EfConnStrId = ConfigurationManager.AppSettings["DataAccess.EfConnStrName"];
+                BasicConnStrId = appSettingStr("DataAccess.BasicConnStrName");
+                EfConnStrId = appSettingStr("DataAccess.EfConnStrName");
             }
 
             internal static string BasicConnStrId { get; }
@@ -37,17 +38,17 @@ namespace Shared.Frameworks.DataAccess
 
         private static readonly string DefaultConnectionStr;
         private static readonly int SqlCommandTimeout;
+        internal static readonly bool PrintDataBeforeInsert;
 
         private static readonly ILogger Log = LoggingManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         static DataAdapter()
         {
-            var connStr = ConfigurationManager.ConnectionStrings[ConfigConstants.BasicConnStrId]?
-                .ConnectionString; //basic
+            var connStr = connString(ConfigConstants.BasicConnStrId); //basic
 
             //see if there isn't an EF-defined connection string:
-            var entityConnectionString = ConfigurationManager.ConnectionStrings[ConfigConstants.EfConnStrId]?
-                .ConnectionString;
+            var entityConnectionString = connString(ConfigConstants.EfConnStrId);
+
             if (string.IsNullOrEmpty(entityConnectionString))
             {
                 if (string.IsNullOrEmpty(connStr))
@@ -63,11 +64,12 @@ namespace Shared.Frameworks.DataAccess
                     .ProviderConnectionString;
             }
 
-            Log.Debug($"Default Connection String = {DefaultConnectionStr}");
+            SqlCommandTimeout = appSetting(ConfigConstants.SqlConnectionTimeoutId, 120);
+            PrintDataBeforeInsert = appSetting("DataAccess.PrintDataBeforeInsert", false);
 
-            var cmdTimeoutStr = ConfigurationManager.AppSettings[ConfigConstants.SqlConnectionTimeoutId];
-            if (!int.TryParse(cmdTimeoutStr, out SqlCommandTimeout))
-                SqlCommandTimeout = 120;
+            Log.Debug($"Default Connection String = {DefaultConnectionStr}. " +
+                      $"SQL timeout = {SqlCommandTimeout}s." +
+                      $"Print data before insert = {PrintDataBeforeInsert}");
         }
 
         public IEnumerable<T> Get<T>(string query,
@@ -101,12 +103,12 @@ namespace Shared.Frameworks.DataAccess
             List<string> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
-            where T : new()
-        {
-            return ExecStProcWithStructuredType(stProcName,
+            where T : new() =>
+        
+            ExecStProcWithStructuredType(stProcName,
                 input.Select(kv => new Tuple<string, object, string>(kv.Key, kv.Value, null)),
                 output, entityAdapter, connStr);
-        }
+        
 
         public IEnumerable<T> ExecStProcWithStructuredType<T>(string stProcName,
             IEnumerable<Tuple<string, object, string>> input,
@@ -268,21 +270,27 @@ namespace Shared.Frameworks.DataAccess
                 var vals = props.Select(x => x.GetValue(d, null)).ToArray();
                 result.Rows.Add(vals);
 
-                //if (captureSerializedData)
-                //{
+                if (DataAdapter.PrintDataBeforeInsert)
+                {
                     sdata.Add(string.Join(",", vals.Select(x => x is string ? $"'{x.ToString()}'" : x?.ToString() ?? "NULL")));
-                //}
+                }
             }
 
-            //if (captureSerializedData)
-            //{
+            if (!DataAdapter.PrintDataBeforeInsert) return result;
+
+            try
+            {
                 if (sdata.Count == 0)
                 {
                     throw new ApplicationException("Data to save to the DB is empty");
                 }
-                var s = $"( {string.Join(" ),\n( ", sdata)} )";                
+                var s = $"( {string.Join(" ),\n( ", sdata)} )";
                 Log.Debug($"Data to be inserted: \n{s}");
-            //}
+            }
+            catch (Exception ex) //we could get out of memory exception for very large data sets
+            {
+                Log.Warn($"EXCEPTION: Could not log data (UDTT) before calling DB st proc (insert/update). Item count: {sdata.Count}. Exception Reason = {ex.Message}");
+            }
             return result;
         }
         #endregion

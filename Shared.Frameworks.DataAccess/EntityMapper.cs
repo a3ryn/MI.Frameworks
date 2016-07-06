@@ -38,8 +38,12 @@ namespace Shared.Frameworks.DataAccess
                 var outputColumnName = (output != null && output.Any()) ? output[0] : null;
                 var numberOfColumns = reader.FieldCount;
 
-                if (CheckAndProcessScalarOutput(reader, output, outputColumnName, numberOfColumns, out entity))
+                T tmpEntity;
+                if (CheckAndProcessScalarOutput(reader, output, outputColumnName, numberOfColumns, out tmpEntity))
+                {
+                    entity = tmpEntity;
                     return;
+                }
 
                 for (var columnIndex = 0; columnIndex < numberOfColumns; columnIndex++)
                 {
