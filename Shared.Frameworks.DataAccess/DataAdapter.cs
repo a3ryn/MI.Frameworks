@@ -254,7 +254,12 @@ namespace Shared.Frameworks.DataAccess
 
             var result = new DataTable(typeName);
             if (!(data is IEnumerable))
+            {
+                Log.Warn("Data is not IEnumerable!");
                 return null;
+            }
+
+            var dataEnum = (IEnumerable)data;
 
             var type = data.GetType().GetGenericArguments().FirstOrDefault();
             if (type == null) return null;
@@ -265,11 +270,19 @@ namespace Shared.Frameworks.DataAccess
             }
             
             var sdata = new List<string>();
-            foreach (var d in (IEnumerable)data)
+            foreach (var d in dataEnum)
             {
-                var vals = props.Select(x => x.GetValue(d, null)).ToArray();
-                result.Rows.Add(vals);
-
+                object[] vals;
+                try
+                {
+                    vals = props.Select(x => x.GetValue(d, null)).ToArray();
+                    result.Rows.Add(vals);
+                }
+                catch (Exception e)
+                {
+                    Log.Error("Exception building DataTable: " + e.Message);
+                    throw;
+                }
                 if (DataAdapter.PrintDataBeforeInsert)
                 {
                     sdata.Add(string.Join(",", vals.Select(x => x is string ? $"'{x.ToString()}'" : x?.ToString() ?? "NULL")));

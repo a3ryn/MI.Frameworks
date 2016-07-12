@@ -8,7 +8,7 @@ using Shared.Frameworks.DataAccess.CodeGen.Helpers;
 using Shared.Frameworks.DataAccess.CodeGen.TemplateTypes;
 using static Shared.Core.Common.corefunc;
 
-namespace Shared.Frameworks.DataAccess.Tests
+namespace Shared.Frameworks.Tests
 {
     [TestClass]
     public class CodeGenTests

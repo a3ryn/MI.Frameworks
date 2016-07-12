@@ -66,7 +66,7 @@
     <Compile Include="Extensions\EnumExt.cs" />
     <Compile Include="Extensions\ExecuteMethodTemplates.cs" />
     <Compile Include="Extensions\Functional.cs" />
-    <Compile Include="Extensions\Mef.cs" />
+    <Compile Include="DI\Mef.cs" />
     <Compile Include="Extensions\Reflection.cs" />
     <Compile Include="Logging\ILogger.cs" />
     <Compile Include="Logging\Logger.cs" />

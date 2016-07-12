@@ -9,8 +9,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Core.Common", "Share
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Frameworks.Caching", "Shared.Frameworks.Caching\Shared.Frameworks.Caching.csproj", "{C905B9C3-48AB-4063-BCED-0DD705354C2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Frameworks.DataAccess.Tests", "Shared.Frameworks.DataAccess.Tests\Shared.Frameworks.DataAccess.Tests.csproj", "{3DC9A9D6-5970-468F-85B1-EAB94507A2AA}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,10 +27,6 @@ Global
 		{C905B9C3-48AB-4063-BCED-0DD705354C2A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C905B9C3-48AB-4063-BCED-0DD705354C2A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C905B9C3-48AB-4063-BCED-0DD705354C2A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3DC9A9D6-5970-468F-85B1-EAB94507A2AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3DC9A9D6-5970-468F-85B1-EAB94507A2AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3DC9A9D6-5970-468F-85B1-EAB94507A2AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3DC9A9D6-5970-468F-85B1-EAB94507A2AA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
