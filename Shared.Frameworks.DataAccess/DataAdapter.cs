@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using System.Data.SqlClient;
-using System.Configuration;
 using System.Data;
 using System.Data.EntityClient;
 using System.Diagnostics;
@@ -100,7 +99,7 @@ namespace Shared.Frameworks.DataAccess
 
         public IEnumerable<T> ExecStProc<T>(string stProcName,
             Dictionary<string, object> input,
-            List<string> output = null,
+            Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
             where T : new() =>
@@ -112,7 +111,7 @@ namespace Shared.Frameworks.DataAccess
 
         public IEnumerable<T> ExecStProcWithStructuredType<T>(string stProcName,
             IEnumerable<Tuple<string, object, string>> input,
-            List<string> output = null,
+            Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
             where T : new()
@@ -122,7 +121,7 @@ namespace Shared.Frameworks.DataAccess
 
             Execute(() =>
             {
-                var sqlParams = CreateSqlParameters(stProcName, input);
+                var sqlParams = CreateSqlParameters(stProcName, input, output);
 
                 using (var conn = new SqlConnection(connStr))
                 {
@@ -134,7 +133,7 @@ namespace Shared.Frameworks.DataAccess
                             spcmd.Parameters.AddRange(sqlParams.ToArray());
                         spcmd.CommandTimeout = SqlCommandTimeout;
 
-                        result = conn.OpenConnectionAndReadData(entityAdapter, spcmd);
+                        result = conn.OpenConnectionAndReadData(entityAdapter, spcmd, output);
                     }
                 }
             }, stProcName, connStr);
@@ -168,7 +167,8 @@ namespace Shared.Frameworks.DataAccess
             }
         }
 
-        internal static IEnumerable<T> OpenConnectionAndReadData<T>(this IDbConnection conn, Func<SqlDataReader, T> entityAdapter, SqlCommand cmd)
+        internal static IEnumerable<T> OpenConnectionAndReadData<T>(this IDbConnection conn, Func<SqlDataReader, T> entityAdapter, 
+            SqlCommand cmd, Dictionary<string,SqlDbType> output = null)
             where T : new()
         {
             var result = new List<T>();
@@ -188,6 +188,8 @@ namespace Shared.Frameworks.DataAccess
                             result.Add(p);
                         }
                     }
+
+                    ProcessOutputValues(cmd, output, result);
                 }
             }
             catch (Exception dae)
@@ -197,10 +199,22 @@ namespace Shared.Frameworks.DataAccess
             return result;
         }
 
+        private static void ProcessOutputValues<T>(SqlCommand cmd, Dictionary<string, SqlDbType> output, List<T> result) where T : new()
+        {
+            if (output != null)
+            {
+                result.AddRange(
+                    cmd.Parameters.Cast<SqlParameter>()
+                        .Where(x => x.Direction == ParameterDirection.Output)
+                        .Select(o => (T) Convert.ChangeType(o.Value, typeof (T)))
+                        .Where(p => p != null));
+            }
+        }
+
         internal static List<SqlParameter> CreateSqlParameters(
             string stProcName,
             IEnumerable<Tuple<string, object, string>> argNamesWithValuesAndType, 
-            IEnumerable<string> outputParams = null)
+            IDictionary<string, SqlDbType> outputParams = null)
         {
             if (argNamesWithValuesAndType == null)
                 return null;
@@ -214,7 +228,7 @@ namespace Shared.Frameworks.DataAccess
 
             foreach (var oparam in outputParams)
             {
-                ProcessParam(oparam, null, ref sb, ref paramAdded, sparams, true);
+                ProcessParam(oparam.Key, null, ref sb, ref paramAdded, sparams, true, dbType:oparam.Value);
             }
             return sparams;
         }
@@ -252,23 +266,42 @@ namespace Shared.Frameworks.DataAccess
         {
             //const bool captureSerializedData = true; //set to true only when you want to get the rows to test in SSMS
 
-            var result = new DataTable(typeName);
+            
             if (!(data is IEnumerable))
             {
                 Log.Warn("Data is not IEnumerable!");
                 return null;
             }
-
-            var dataEnum = (IEnumerable)data;
-
+          
             var type = data.GetType().GetGenericArguments().FirstOrDefault();
             if (type == null) return null;
-            var props = type.GetProperties(BindingFlags.Public | BindingFlags.Instance).OrderBy(x => Reflection.GetCustomAttributes<DataMappingAttribute>(x).FirstOrDefault()?.Order ?? 0).ToList();
+            var props =
+                type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    .OrderBy(x => Reflection.GetCustomAttributes<DataMappingAttribute>(x).FirstOrDefault()?.Order ?? 0)
+                    .ToList();
+
+            var result = CreateDataTable(typeName, props);
+            var sdata = PopulateDataTable(data, props, result);
+
+            if (!DataAdapter.PrintDataBeforeInsert) return result;
+
+            LogUdttData(sdata);
+            return result;
+        }
+
+        private static DataTable CreateDataTable(string typeName, List<PropertyInfo> props)
+        {
+            var result = new DataTable(typeName);
             foreach (var pi in props)
             {
                 result.Columns.Add(pi.Name, pi.PropertyType);
             }
-            
+            return result;
+        }
+
+        private static List<string> PopulateDataTable(object data, List<PropertyInfo> props, DataTable result)
+        {
+            var dataEnum = (IEnumerable)data;
             var sdata = new List<string>();
             foreach (var d in dataEnum)
             {
@@ -288,9 +321,11 @@ namespace Shared.Frameworks.DataAccess
                     sdata.Add(string.Join(",", vals.Select(x => x is string ? $"'{x.ToString()}'" : x?.ToString() ?? "NULL")));
                 }
             }
+            return sdata;
+        }
 
-            if (!DataAdapter.PrintDataBeforeInsert) return result;
-
+        private static void LogUdttData(ICollection<string> sdata)
+        {
             try
             {
                 if (sdata.Count == 0)
@@ -302,10 +337,11 @@ namespace Shared.Frameworks.DataAccess
             }
             catch (Exception ex) //we could get out of memory exception for very large data sets
             {
-                Log.Warn($"EXCEPTION: Could not log data (UDTT) before calling DB st proc (insert/update). Item count: {sdata.Count}. Exception Reason = {ex.Message}");
+                Log.Warn(
+                    $"EXCEPTION: Could not log data (UDTT) before calling DB st proc (insert/update). Item count: {sdata.Count}. Exception Reason = {ex.Message}");
             }
-            return result;
         }
+
         #endregion
     }
 }

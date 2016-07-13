@@ -27,7 +27,7 @@ namespace Shared.Frameworks.DataAccess
         private const string TranslationError =
             "[{0} translation level]: Could not translate property associated with column {1}.";
 
-        internal static T MapObject<T>(this SqlDataReader reader, Dictionary<Guid, List<Tuple<object, string>>> navProps = null, List<string> output = null) where T : new()
+        internal static T MapObject<T>(this SqlDataReader reader, Dictionary<Guid, List<Tuple<object, string>>> navProps = null, Dictionary<string, SqlDbType> output = null) where T : new()
         {
             var entity = CreateInstance<T>();
 
@@ -35,7 +35,7 @@ namespace Shared.Frameworks.DataAccess
             {
                 var propertyInfos = PropertyInfosByType[typeof (T)]; //already populated
 
-                var outputColumnName = (output != null && output.Any()) ? output[0] : null;
+                var outputColumnName = (output != null && output.Any()) ? output.First().Key : null;
                 var numberOfColumns = reader.FieldCount;
 
                 T tmpEntity;
@@ -152,7 +152,7 @@ namespace Shared.Frameworks.DataAccess
             return genericMethod.Invoke(null, objects);
         }
 
-        private static bool CheckAndProcessScalarOutput<T>(SqlDataReader reader, List<string> output, string outputColumnName,
+        private static bool CheckAndProcessScalarOutput<T>(SqlDataReader reader, Dictionary<string, SqlDbType> output, string outputColumnName,
     int numberOfColumns, out T entity) where T : new()
         {
             entity = default(T);
@@ -166,7 +166,7 @@ namespace Shared.Frameworks.DataAccess
             return true;
         }
 
-        private static KeyValuePair<string, object> GetColumnNameAndValue(SqlDataReader reader, int columnIndex)
+        private static KeyValuePair<string, object> GetColumnNameAndValue(IDataRecord reader, int columnIndex)
         {
             return new KeyValuePair<string, object>(
                 reader.GetName(columnIndex),

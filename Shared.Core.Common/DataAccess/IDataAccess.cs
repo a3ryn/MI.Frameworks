@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Data.SqlClient;
 
 namespace Shared.Core.Common.DataAccess
@@ -12,13 +13,13 @@ namespace Shared.Core.Common.DataAccess
 
         IEnumerable<T> ExecStProc<T>(string stProcName, 
             Dictionary<string, object> input, 
-            List<string> output = null,
+            Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null, 
             string connStr = null) where T : new();
 
         IEnumerable<T> ExecStProcWithStructuredType<T>(string stProcName,
             IEnumerable<Tuple<string, object, string>> input,
-            List<string> output = null,
+            Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
             where T : new();
