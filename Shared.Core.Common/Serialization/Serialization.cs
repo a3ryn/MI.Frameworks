@@ -9,6 +9,8 @@ using Newtonsoft.Json.Serialization;
 
 namespace Shared.Core.Common.Serialization
 {
+    using static auxfunc;
+
     public class StringWriterWithEncoding : StringWriter
     {
         public StringWriterWithEncoding(Encoding e)
@@ -74,14 +76,15 @@ namespace Shared.Core.Common.Serialization
             Formatting = Newtonsoft.Json.Formatting.Indented,
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
-            TypeNameHandling = TypeNameHandling.All,
+            TypeNameHandling = appSetting("Json.IncludeTypeMetadata", true) 
+                                ? TypeNameHandling.All : TypeNameHandling.None,
         };
 
-        public static string ToJson<T>(this T r) =>
-            JsonConvert.SerializeObject(r, SerializerSettings);
+        public static string ToJson<T>(this T r, JsonSerializerSettings settings = null) =>
+            JsonConvert.SerializeObject(r, settings ?? SerializerSettings);
 
-        public static T FromJson<T>(this string s) =>
-            JsonConvert.DeserializeObject<T>(s, SerializerSettings);
+        public static T FromJson<T>(this string s, JsonSerializerSettings settings = null) =>
+            JsonConvert.DeserializeObject<T>(s, settings ?? SerializerSettings);
 
         #endregion
     }
