@@ -6,49 +6,51 @@ namespace Shared.Frameworks.DataAccess.CodeGen.Helpers
 {
     public static class CodeGenerator
     {
-        public static void GenerateProxiesFromDb(string path, string @namespace, string connStr, IEnumerable<string> tableNames = null, IEnumerable<string> udttNames = null)
+        public static void GenerateProxiesFromDb(string path, string @namespace, string connStr, 
+            IEnumerable<string> tableNames = null, IEnumerable<string> udttNames = null, string schema = "dbo")
         {
             var sqlConnStr = new SqlConnectionString(connStr);
 
             sqlConnStr.GenerateProxiesFromDb(
-                tableNames ?? sqlConnStr.GetDbObjectNames(TableType.TableOrView),
-                udttNames ?? sqlConnStr.GetDbObjectNames(TableType.Udtt),
-                path, @namespace
+                tableNames ?? sqlConnStr.GetDbObjectNames(TableType.TableOrView, null, schema),
+                udttNames ?? sqlConnStr.GetDbObjectNames(TableType.Udtt, null, schema),
+                path, @namespace, schema
                 );
         }
 
-        public static void GenerateProxiesFromDb(string path, string @namespace, string connStr, string prefix = null, bool includeTablesAndViews = true, bool includeUdtts = true)
+        public static void GenerateProxiesFromDb(string path, string @namespace, string connStr, 
+            string prefix = null, bool includeTablesAndViews = true, bool includeUdtts = true, string schema = "dbo")
         {
             var sqlConnStr = new SqlConnectionString(connStr);
 
             sqlConnStr.GenerateProxiesFromDb(
-                includeTablesAndViews ? sqlConnStr.GetDbObjectNames(TableType.TableOrView, prefix) : null,
-                includeUdtts ? sqlConnStr.GetDbObjectNames(TableType.Udtt, prefix) : null,
-                path, @namespace
+                includeTablesAndViews ? sqlConnStr.GetDbObjectNames(TableType.TableOrView, prefix, schema) : null,
+                includeUdtts ? sqlConnStr.GetDbObjectNames(TableType.Udtt, prefix, schema) : null,
+                path, @namespace, schema
                 );
         }
 
-        public class StringWrapper
+        internal class StringWrapper
         {
             public string Value { get; set; }
         }
 
         private static void GenerateProxiesFromDb(this SqlConnectionString sqlConnStr, IEnumerable<string> tableNames, IEnumerable<string> udttNames,
-            string path, string @namespace)
+            string path, string @namespace, string schema)
         {
-            sqlConnStr.GenerateProxiesFromDb(tableNames, TableType.TableOrView, path, @namespace);
-            sqlConnStr.GenerateProxiesFromDb(udttNames, TableType.Udtt, path, @namespace);
+            sqlConnStr.GenerateProxiesFromDb(tableNames, TableType.TableOrView, path, @namespace, schema);
+            sqlConnStr.GenerateProxiesFromDb(udttNames, TableType.Udtt, path, @namespace, schema);
         }
 
         private static void GenerateProxiesFromDb(this SqlConnectionString sqlConnStr, IEnumerable<string> dbObjectNames,
-            TableType type, string path, string @namespace)
+            TableType type, string path, string @namespace, string schema)
         {
             if (dbObjectNames == null) return;
             foreach (var name in dbObjectNames)
             {
                 var script =
                     sqlConnStr
-                    .GetResultSchema(string.Format(GetEmptyDataCommands[type], name))?
+                    .GetResultSchema(string.Format(GetEmptyDataCommands[type], schema, name))?
                     .ToTypeTemplate(name, @namespace)?
                     .Expand();
 
@@ -68,7 +70,7 @@ namespace Shared.Frameworks.DataAccess.CodeGen.Helpers
         /// </summary>
         private static readonly Dictionary<TableType, string> GetNamesCommands = new Dictionary<TableType, string>
         {
-            [TableType.TableOrView] = "SELECT table_name AS Value FROM INFORMATION_SCHEMA.COLUMNS {0} GROUP BY TABLE_CATALOG, TABLE_NAME",
+            [TableType.TableOrView] = "SELECT table_name AS Value FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME <> 'sysdiagrams'{0} GROUP BY TABLE_CATALOG, TABLE_NAME, TABLE_SCHEMA",
             [TableType.Udtt] = "SELECT name AS Value FROM SYS.TYPES WHERE IS_USER_DEFINED = 1 {0}"
         };
 
@@ -78,8 +80,14 @@ namespace Shared.Frameworks.DataAccess.CodeGen.Helpers
         /// </summary>
         private static readonly Dictionary<TableType, string> GetNamesClauses = new Dictionary<TableType, string>
         {
-            [TableType.TableOrView] = " WHERE table_name LIKE '{0}%'",
+            [TableType.TableOrView] = " AND table_name LIKE '{0}%'",
             [TableType.Udtt] = " AND name LIKE '{0}%'"
+        };
+
+        private static readonly Dictionary<TableType, string> GetNamesSchemaClauses = new Dictionary<TableType, string>
+        {
+            [TableType.TableOrView] = " AND TABLE_SCHEMA = '{0}'",
+            [TableType.Udtt] = " AND SCHEMA_NAME(schema_id) = '{0}'"
         };
 
         /// <summary>
@@ -88,17 +96,22 @@ namespace Shared.Frameworks.DataAccess.CodeGen.Helpers
         /// </summary>
         private static readonly Dictionary<TableType, string> GetEmptyDataCommands = new Dictionary<TableType, string>
         {
-            [TableType.TableOrView] = "SELECT TOP 0 * FROM {0}",
-            [TableType.Udtt] = "DECLARE @data {0}; SELECT * FROM @data "
+            [TableType.TableOrView] = "SELECT TOP 0 * FROM {0}.{1}",
+            [TableType.Udtt] = "DECLARE @data {0}.{1}; SELECT * FROM @data "
         };
 
 
-        internal static IEnumerable<string> GetDbObjectNames(this SqlConnectionString sqlConnStr, TableType type, string prefix = null)
+        internal static IEnumerable<string> GetDbObjectNames(this SqlConnectionString sqlConnStr, 
+            TableType type, string prefix = null, string schema = null)
         {
             var clause = "";
             if (!string.IsNullOrEmpty(prefix))
             {
                 clause = string.Format(GetNamesClauses[type], prefix);
+            }
+            if (!string.IsNullOrEmpty(schema))
+            {
+                clause += string.Format(GetNamesSchemaClauses[type], schema);
             }
             var cmd = string.Format(GetNamesCommands[type], clause);
             return sqlConnStr.GetDbObjectNames(cmd);

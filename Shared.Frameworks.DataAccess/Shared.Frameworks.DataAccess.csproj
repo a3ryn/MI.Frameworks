@@ -48,6 +48,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CodeGen\DataProxiesGenerator.cs" />
     <Compile Include="CodeGen\Helpers\CodeGenerator.cs" />
     <Compile Include="CodeGen\Common\Enums.cs" />
     <Compile Include="CodeGen\Common\ScriptUtilities.cs" />
