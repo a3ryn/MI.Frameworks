@@ -210,10 +210,10 @@ namespace Shared.Frameworks.DataAccess.CodeGen.Helpers
         public System.Int32 ColumnSize { get; set; }
 
         [DataMapping("NumericPrecision", 3)]
-        public byte NumericPrecision { get; set; }
+        public System.Int16 NumericPrecision { get; set; }
 
         [DataMapping("NumericScale", 4)]
-        public byte NumericScale { get; set; }
+        public System.Int16 NumericScale { get; set; }
 
         [DataMapping("IsUnique", 5)]
         public bool IsUnique { get; set; }
