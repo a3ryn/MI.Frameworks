@@ -14,7 +14,7 @@ namespace Shared.Core.Common.Extensions
             var queueMissingParams = new Queue<object>(missingParamValues);
 
             var dgtMi = typeof(T).GetMethod("Invoke");
-            var dgtRet = dgtMi.ReturnType;
+            //var dgtRet = dgtMi.ReturnType;
             var dgtParams = dgtMi.GetParameters();
 
             var paramsOfDelegate = dgtParams
@@ -37,26 +37,17 @@ namespace Shared.Core.Common.Extensions
             }
             else
             {
-                try
-                {
-                    var paramThis = Expression.Convert(paramsOfDelegate[0], method.DeclaringType);
+                var paramThis = Expression.Convert(paramsOfDelegate[0], method.DeclaringType);
 
-                    var paramsToPass = methodParams
-                        .Select((p, i) => CreateParam(paramsOfDelegate, i + 1, p, queueMissingParams))
-                        .ToArray();
+                var paramsToPass = methodParams
+                    .Select((p, i) => CreateParam(paramsOfDelegate, i + 1, p, queueMissingParams))
+                    .ToArray();
 
-                    var expr = Expression.Lambda<T>(
-                        Expression.Call(paramThis, method, paramsToPass),
-                        paramsOfDelegate);
+                var expr = Expression.Lambda<T>(
+                    Expression.Call(paramThis, method, paramsToPass),
+                    paramsOfDelegate);
 
-                    return expr.Compile();
-                }
-                catch (Exception e)
-                {
-                    
-                    throw;
-                }
-                
+                return expr.Compile();
             }
         }
 

@@ -72,7 +72,6 @@ namespace Shared.Core.Common.Serialization
         #region  JSON Serialization
         private static JsonSerializerSettings SerializerSettings { get; } = new JsonSerializerSettings
         {
-            //TODO - perhaps read from some configuration file
             Formatting = Newtonsoft.Json.Formatting.Indented,
             ContractResolver = new CamelCasePropertyNamesContractResolver(),
             ReferenceLoopHandling = ReferenceLoopHandling.Ignore,
@@ -85,6 +84,16 @@ namespace Shared.Core.Common.Serialization
 
         public static T FromJson<T>(this string s, JsonSerializerSettings settings = null) =>
             JsonConvert.DeserializeObject<T>(s, settings ?? SerializerSettings);
+
+        /// <summary>
+        /// Deserializes a JSON string to an object, given a custom converter
+        /// </summary>
+        /// <typeparam name="T">The type of the object to be hydrated (can be an interface as well)</typeparam>
+        /// <param name="s">The serialized data (json string)</param>
+        /// <param name="c">The custom converter.</param>
+        /// <returns>An instance of the object reconstructed from the JSON string.</returns>
+        public static T FromJson<T>(this string s, JsonConverter c) =>
+            JsonConvert.DeserializeObject<T>(s,c);
 
         #endregion
     }
