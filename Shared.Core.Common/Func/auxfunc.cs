@@ -1,9 +1,17 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2016 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
+using System.IO;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Diagnostics;
 using System.Linq;
 using Shared.Core.Common.CustomTypes;
+using System.Reflection;
 
 namespace Shared.Core.Common
 {
@@ -68,6 +76,12 @@ namespace Shared.Core.Common
         public static Func<string, string> connString =
             k => ConfigurationManager.ConnectionStrings[k]?.ConnectionString;
 
+
+        public static string executingAssemblyDir() =>
+            Path.GetDirectoryName(Uri.UnescapeDataString(new UriBuilder(Assembly.GetExecutingAssembly().CodeBase).Path));
+
+        public static string csv<T>(IEnumerable<T> items, string sep = ",") => string.Join(sep, items);
+        public static string csv<T>(IDictionary<string, T> items, string sep = ",") => string.Join(sep, items.Select(i => $"[{i.Key}]={i.Value}"));
 
         private static T readSetting<T>(string key, Func<T> defaultFunc)
         {

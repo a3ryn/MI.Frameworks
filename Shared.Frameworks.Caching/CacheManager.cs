@@ -1,9 +1,17 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2016 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.ComponentModel.Composition;
 using System.Reflection;
 using System.Runtime.Caching;
 using Shared.Core.Common.Caching;
 using Shared.Core.Common.Logging;
+using System.Collections.Generic;
+using static Shared.Core.Common.auxfunc;
 
 namespace Shared.Frameworks.Caching
 {
@@ -15,8 +23,7 @@ namespace Shared.Frameworks.Caching
     [PartCreationPolicy(CreationPolicy.Shared)] //singleton instance (only one Cache allowed)
     public class CacheManager : ICache
     {
-        //private static readonly Lazy<CacheManager> This = new Lazy<CacheManager>(() => new CacheManager());
-        private static readonly ILogger Log = LoggingManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         static TimeSpan _defaultExpiration;
         static ObjectCache _cache;
@@ -26,9 +33,6 @@ namespace Shared.Frameworks.Caching
             _cache = MemoryCache.Default;
             _defaultExpiration = new TimeSpan(24, 0, 0);
         }
-
-        //public static CacheManager Instance => This.Value;
-
 
         public T Get<T>(string key)
         {
@@ -89,11 +93,31 @@ namespace Shared.Frameworks.Caching
         }
 
         private static void UpdateCache(CacheEntryUpdateArguments arguments) =>
-            Log.Debug(
-                $"Cache update event received. CacheEntryUpdateArguments: Key={arguments.Key}, Val={arguments.UpdatedCacheItem}");
+            Log.Debug($"{logMsg(CacheAction.Update)} Key={arguments.Key}, Val={arguments.UpdatedCacheItem}");
 
         private static void RemoveFromCache(CacheEntryRemovedArguments arguments) =>
-            Log.Debug(
-                $"Cache remove event received. CacheEntryRemovedArguments: Reason={arguments.RemovedReason}, ItemKey={arguments.CacheItem.Key}");
+            Log.Debug($"{logMsg(CacheAction.Remove)} Reason={arguments.RemovedReason}, ItemKey={arguments.CacheItem.Key}");
+
+        public T Execute<T>(CacheAction a, string key, T item)
+        => (T)del[a](this, key, item);
+
+        public enum CacheAction
+        {
+            Get,
+            Add,
+            Update,
+            Remove
+        }
+
+        private static readonly Dictionary<CacheAction, Func<ICache, string, object, object>> del = new Dictionary<CacheAction, Func<ICache, string, object, object>>
+        {
+            [CacheAction.Get] = (c, k, item) => c.Get<object>(k),
+            [CacheAction.Remove] = (c, k, item) => c.Remove(k),
+            [CacheAction.Add] = (c, k, item) => { c.Put(item, k); return item; },
+            [CacheAction.Update] = (c, k, item) => { c.Put(item, k); return item; }
+        };
+
+        private static Func<CacheAction, string> logMsg = a => $"Cache {a} event received. CacheEntry{a}Arguments: ";
+        private static Func<CacheAction, IDictionary<string, string>, string> logMsgWithArgs = (a, args) => $"Cache {a} event received. CacheEntry{a}Arguments: {csv(args)}";
     }
 }

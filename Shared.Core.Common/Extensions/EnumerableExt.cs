@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2014 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 

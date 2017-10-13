@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2016 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.Collections.Generic;
 
 namespace Shared.Core.Common.CustomTypes

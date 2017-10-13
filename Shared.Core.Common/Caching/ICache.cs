@@ -1,5 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2014 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 
 namespace Shared.Core.Common.Caching
 {

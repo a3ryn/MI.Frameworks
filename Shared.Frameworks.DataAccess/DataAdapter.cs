@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2014 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
@@ -39,7 +45,7 @@ namespace Shared.Frameworks.DataAccess
         private static readonly int SqlCommandTimeout;
         internal static readonly bool PrintDataBeforeInsert;
 
-        private static readonly ILogger Log = LoggingManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         static DataAdapter()
         {
@@ -143,7 +149,7 @@ namespace Shared.Frameworks.DataAccess
 
     internal static class DataAdapterHelper
     {
-        private static readonly ILogger Log = LoggingManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         #region Helpers
         internal static void Execute(Action a, string query, string connStr)

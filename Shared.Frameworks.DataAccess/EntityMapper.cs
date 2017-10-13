@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2014 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -14,7 +20,7 @@ namespace Shared.Frameworks.DataAccess
 {
     internal static class EntityMapper
     {
-        private static readonly ILogger Log = LoggingManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
         private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, PropertyInfo>> PropertyInfosByType 
             = new ConcurrentDictionary<Type, IReadOnlyDictionary<string, PropertyInfo>>(); //lazy hydration
@@ -76,15 +82,11 @@ namespace Shared.Frameworks.DataAccess
             {
                 var propertyInfos = PropertyInfosByType[typeof(T)]; //already populated
 
-                //var outputColumnName = (output != null && output.Any()) ? output[0] : null;
                 var numberOfColumns = dataRow.Table.Columns.Count;
-
-                //if (CheckAndProcessScalarOutput(reader, output, outputColumnName, numberOfColumns, out entity))
-                //    return;
 
                 for (var columnIndex = 0; columnIndex < numberOfColumns; columnIndex++)
                 {
-                    var kvp = //GetColumnNameAndValue(reader, columnIndex);
+                    var kvp = 
                         new KeyValuePair<string, object>(dataRow.Table.Columns[columnIndex].ColumnName, dataRow[columnIndex]);
                     var columnName = kvp.Key;
                     var val = kvp.Value;
@@ -92,16 +94,6 @@ namespace Shared.Frameworks.DataAccess
                     if (!propertyInfos.ContainsKey(columnName)) continue;
 
                     TrySetPropertyUsingConvert(propertyInfos, columnName, val, entity);
-
-                    //try
-                    //{
-                    //    propertyInfos[columnName].SetValue(entity, val, null);
-                    //}
-                    //catch (Exception)
-                    //{
-                    //    Log.Warn(string.Format(TranslationError, "1st", columnName));
-                    //    TrySetPropertyUsingConvert(propertyInfos, columnName, val, entity);
-                    //}
                 }
             }, "MapObject<T>");
 

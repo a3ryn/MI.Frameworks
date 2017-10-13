@@ -1,14 +1,28 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2016 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using Shared.Core.Common.Logging;
+using System;
 using System.Diagnostics;
 using System.Reflection;
-using log4net;
 
 namespace Shared.Core.Common.Extensions
 {
+    /// <summary>
+    /// Wrapper for action and function execution, to capture and log the processing times.
+    /// </summary>
     public static class ExecuteMethodTemplates
     {
-        private static readonly ILog Logger = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Logger = 
+            LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
 
+        /// <summary>
+        /// Executes some action and logs the execution time
+        /// </summary>
+        /// <param name="a"></param>
         public static void Execute(this Action a)
         {
             var f = new StackFrame(2);
@@ -24,6 +38,12 @@ namespace Shared.Core.Common.Extensions
             BuildLogEntry(m, s.ElapsedMilliseconds).Log();
         }
 
+        /// <summary>
+        /// Execcutes some function, logs the execution time, and returns the result
+        /// </summary>
+        /// <typeparam name="TResult">The type of the expected result</typeparam>
+        /// <param name="func">The function to be executed</param>
+        /// <returns>The result instance returned by the function</returns>
         public static TResult ExecuteFunc<TResult>(this Func<TResult> func)
         {
             var result = default(TResult);

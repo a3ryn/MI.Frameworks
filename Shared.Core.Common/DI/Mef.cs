@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2016 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Reflection;
@@ -6,14 +12,15 @@ using System.Reflection;
 namespace Shared.Core.Common.DI
 {
     using static Extensions.Reflection;
+    using static auxfunc;
 
     public static class Mef
     {
         private static readonly string DefaultPath;
         static Mef()
         {
-            var configuredPathToScan = System.Configuration.ConfigurationManager.AppSettings["MEF.AssembliesPath"];
-            DefaultPath = configuredPathToScan ?? ".\\bin"; //use bin only for web apps running in debug mode; but for console apps use Environment.CurrentDirectory
+            var configuredPathToScan = appSetting<string>("MEF.AssembliesPath");
+            DefaultPath = configuredPathToScan ?? executingAssemblyDir();
         }
 
         /// <summary>
@@ -24,11 +31,9 @@ namespace Shared.Core.Common.DI
         /// <param name="exportName">The export name (optional)</param>
         /// <param name="path">The path to the realization assembly (optional).</param>
         /// <returns>An instance of a non-disposable type.</returns>
-        public static T Resolve<T>(string exportName = null, string path = null)
-        {
-            IDisposable c;
-            return Resolve<T>(out c, exportName, path);
-        }
+        public static T Resolve<T>(string exportName = null, string path = null) =>
+            Resolve<T>(out IDisposable c, exportName, path);
+        
 
 
         /// <summary>
@@ -98,7 +103,7 @@ namespace Shared.Core.Common.DI
 
                 return export.Value;
             //}
-            //the container will be disposed of only if T or the realization of T does not implement IDisposable
+            //the container will be disposed if only if T or the realization of T does not implement IDisposable
         }
 
     }

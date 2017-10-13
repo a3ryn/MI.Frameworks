@@ -1,4 +1,10 @@
-﻿using System;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2017 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using System;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Text;
@@ -23,6 +29,7 @@ namespace Shared.Core.Common.Serialization
 
     public static class SerializationExt
     {
+        #region XML Serialization
         private static readonly ConcurrentDictionary<Type, XmlSerializer> XmlSerializers =
             new ConcurrentDictionary<Type, XmlSerializer>();
 
@@ -63,6 +70,7 @@ namespace Shared.Core.Common.Serialization
                 return (T) ser.Deserialize(reader);
             }
         }
+        #endregion
 
         public static void WriteToFile(this string data, string path)
         {
