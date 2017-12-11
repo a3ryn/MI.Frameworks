@@ -2,7 +2,7 @@
 <package >
   <metadata>
     <id>SharedLibs.Caching</id>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <title>Shared Caching Framework</title>
     <authors>Mihaela Iridon</authors>
     <owners></owners>
