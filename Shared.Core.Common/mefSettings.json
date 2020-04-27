@@ -1,0 +1,6 @@
+{
+  "mef": {
+    "assebliesPath": ".",
+    "csvSearchPatterns": "*"
+  }
+}

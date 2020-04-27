@@ -1,0 +1,1 @@
+SqlTools\sqlpackage.exe /a:Publish /sf:"..\Candea.SampleDb\bin\Debug\Candea.SampleDb.dacpac" /Profile:"..\Candea.SampleDb\Candea.SampleDb.local.publish.xml"
