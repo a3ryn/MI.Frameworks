@@ -7,7 +7,7 @@ https://opensource.org/licenses/MIT
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 
 namespace Shared.Core.Common.DataAccess
 {
@@ -46,7 +46,9 @@ namespace Shared.Core.Common.DataAccess
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="stProcName"></param>
-        /// <param name="input"></param>
+        /// <param name="input">A collection of inputs: simple or structured readonly UDTT inputs, one per input parameter.
+        /// Each tuple contains the name of the input parameter (in the st proc), the actual parameter value or 
+        /// collection of C# proxy instances/rows (if UDTT), and finally the 2-part name of the parameter type name (simple data type or UDTT type name.</param>
         /// <param name="output"></param>
         /// <param name="entityAdapter"></param>
         /// <param name="connStr"></param>

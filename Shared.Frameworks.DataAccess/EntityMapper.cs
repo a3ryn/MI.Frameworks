@@ -5,11 +5,12 @@ https://opensource.org/licenses/MIT
 */
 
 using System;
+using static System.Diagnostics.Debug;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Data;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Linq;
 using System.Reflection;
 using Shared.Core.Common.DataAccess;
@@ -20,7 +21,18 @@ namespace Shared.Frameworks.DataAccess
 {
     internal static class EntityMapper
     {
-        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static EntityMapper()
+        {
+            try
+            {
+                Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            }catch(Exception e)
+            {
+                WriteLine($"Logger could not be resolved. Will continue without logging. INitialization exception: {e.Message}");
+            }
+        }
+
+        private static readonly ILogger Log = null;
 
         private static readonly ConcurrentDictionary<Type, IReadOnlyDictionary<string, PropertyInfo>> PropertyInfosByType 
             = new ConcurrentDictionary<Type, IReadOnlyDictionary<string, PropertyInfo>>(); //lazy hydration
@@ -65,7 +77,7 @@ namespace Shared.Frameworks.DataAccess
                     }
                     catch (Exception)
                     {
-                        Log.Warn(string.Format(TranslationError, "1st",columnName));
+                        Log?.Warn(string.Format(TranslationError, "1st",columnName));
                         TrySetPropertyUsingConvert(propertyInfos, columnName, val, entity);
                     }
                 }
@@ -201,7 +213,7 @@ namespace Shared.Frameworks.DataAccess
             {
                 //ignore
                 var msg = string.Format(TranslationError, "2nd", columnName);
-                Log.Warn($"{msg} Exception: {e.Message}.");
+                Log?.Warn($"{msg} Exception: {e.Message}.");
             }
         }
         #endregion
@@ -213,7 +225,7 @@ namespace Shared.Frameworks.DataAccess
             //s.Start();
             a();
             //s.Stop();
-            //Log.Debug($"Execute{mtd}: {s.ElapsedMilliseconds} [ms]");
+            //Log?.Debug($"Execute{mtd}: {s.ElapsedMilliseconds} [ms]");
         }
     }
 }

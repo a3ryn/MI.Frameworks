@@ -1,15 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30002.166
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Frameworks.DataAccess", "Shared.Frameworks.DataAccess\Shared.Frameworks.DataAccess.csproj", "{44072D47-E0C1-41C2-B366-138C4FE01CF3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Frameworks.DataAccess", "Shared.Frameworks.DataAccess\Shared.Frameworks.DataAccess.csproj", "{44072D47-E0C1-41C2-B366-138C4FE01CF3}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Core.Common", "Shared.Core.Common\Shared.Core.Common.csproj", "{DF4C2915-22A1-4B8E-94D5-7622ECEB063B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Core.Common", "Shared.Core.Common\Shared.Core.Common.csproj", "{DF4C2915-22A1-4B8E-94D5-7622ECEB063B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Frameworks.Caching", "Shared.Frameworks.Caching\Shared.Frameworks.Caching.csproj", "{C905B9C3-48AB-4063-BCED-0DD705354C2A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Frameworks.Caching", "Shared.Frameworks.Caching\Shared.Frameworks.Caching.csproj", "{C905B9C3-48AB-4063-BCED-0DD705354C2A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared.Frameworks.Logging.Log4Net", "Shared.Frameworks.Logging.Log4Net\Shared.Frameworks.Logging.Log4Net.csproj", "{8DD5E54B-E774-43A4-982F-8917D4342CB7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Shared.Frameworks.Logging.Log4Net", "Shared.Frameworks.Logging.Log4Net\Shared.Frameworks.Logging.Log4Net.csproj", "{8DD5E54B-E774-43A4-982F-8917D4342CB7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "UsageSamples", "UsageSamples", "{53BA206D-068C-4D8C-A0BB-4CF9B1AF112E}"
+EndProject
+Project("{00D1A9C2-B5F0-4AF3-8072-F6C62B433612}") = "Candea.SampleDb", "Candea.SampleDb\Candea.SampleDb.sqlproj", "{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Candea.Frameworks.Tests", "Candea.Frameworks.Tests\Candea.Frameworks.Tests.csproj", "{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,9 +39,23 @@ Global
 		{8DD5E54B-E774-43A4-982F-8917D4342CB7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DD5E54B-E774-43A4-982F-8917D4342CB7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DD5E54B-E774-43A4-982F-8917D4342CB7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Debug|Any CPU.Deploy.0 = Debug|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A3A2E9DF-9F27-442E-A00A-4CF27B1BE5DA} = {53BA206D-068C-4D8C-A0BB-4CF9B1AF112E}
+		{2AC42710-EA44-4CBC-BE81-81A6A5D8E84B} = {53BA206D-068C-4D8C-A0BB-4CF9B1AF112E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {88B735A3-0498-47C5-84C5-F23E768D21FB}

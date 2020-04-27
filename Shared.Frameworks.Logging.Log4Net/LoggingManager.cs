@@ -11,6 +11,7 @@ using static System.Diagnostics.Debug;
 using static Shared.Core.Common.auxfunc;
 using static log4net.Config.XmlConfigurator;
 using System.ComponentModel.Composition;
+using System.Reflection;
 
 namespace Shared.Frameworks.Logging
 {
@@ -22,19 +23,42 @@ namespace Shared.Frameworks.Logging
     {
         internal static readonly bool RunOnSeparateThread = false;
 
+        /// <summary>
+        /// AppSetting key name to use for configuring this logging framework and to override defaults.
+        /// Set the value for this key to be TRUE if you want the logging activity to be executed on a separate thread.
+        /// If not configured, the default value used will be True.
+        /// </summary>
+        public const string Logging_AppSettings_RunOnSeparateThreadKey = "Logging.RunOnSeparateThread";
+
+        /// <summary>
+        /// AppSetting key name to use to configure the path to the log4net config file, including the file name.
+        /// If not configured, the default location will "log4net.config", which means the configuration file
+        /// is "log4net.config" and it will be read from the current directory (for executing assembly).
+        /// </summary>
+        public const string Logging_AppSetting_ConfigFilePathKey = "Logging.ConfigFilePath";
+
+        /// <summary>
+        /// AppSetting key name to use to configure the first line (header) to be logged at startup of the application.
+        /// If a value for this key is not specified, the default header string will be "_____________ START _____________".
+        /// </summary>
+        public const string Logging_AppSetting_HeaderStringKey = "Logging.Header";
+
         static LoggingManager()
         {
-            var header = appSetting("Logging.Header", "_____________ START _____________");
-            var configFileName = appSetting("Logging.ConfigFilePath", "log4net.config");
+            var header = appSetting(Logging_AppSetting_HeaderStringKey, "_____________ START _____________");
+            var configFileName = appSetting(Logging_AppSetting_ConfigFilePathKey, "log4net.config");
 
-            RunOnSeparateThread = appSetting("Logging.RunOnSeparateThread", true);
+            RunOnSeparateThread = appSetting(Logging_AppSettings_RunOnSeparateThreadKey, true);
             try
             {
                 var configFile = new FileInfo(Path.Combine(Environment.CurrentDirectory,configFileName));
+                var logRepository = log4net.LogManager.GetRepository(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
                 if (configFile.Exists)
-                    Configure(configFile);
+                {
+                    Configure(logRepository, configFile);
+                }
                 else
-                    Configure();
+                    Configure(logRepository);
             }
             catch(Exception e)
             {
@@ -48,8 +72,8 @@ namespace Shared.Frameworks.Logging
         }
        
 
-        public static ILogger Logger(string name) => new Logger(name) as ILogger;
-        public ILogger GetLogger(string name) => Logger(name);
+        //public static ILogger Logger(string name) => new Logger(name) as ILogger;
+        //public ILogger GetLogger(string name) => Logger(name);
         
         public static ILogger Logger<T>() where T : class => new Logger(typeof(T)) as ILogger;
         public ILogger GetLogger<T>() where T : class => Logger<T>();

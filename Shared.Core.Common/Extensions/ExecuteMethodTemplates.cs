@@ -16,8 +16,20 @@ namespace Shared.Core.Common.Extensions
     /// </summary>
     public static class ExecuteMethodTemplates
     {
-        private static readonly ILogger Logger = 
-            LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        static ExecuteMethodTemplates()
+        {
+            try
+            {
+                Logger =
+                    LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            }
+            catch(Exception e)
+            {
+                Debug.WriteLine($"Logger could not be resolved. Will continue without logging. INitialization exception: {e.Message}");
+            }
+        }
+
+        private static readonly ILogger Logger = null;
 
         /// <summary>
         /// Executes some action and logs the execution time
@@ -57,7 +69,7 @@ namespace Shared.Core.Common.Extensions
         {
             if (toLog)
             {
-                Logger.Debug(m);
+                Logger?.Debug(m);
             }
             else
             {

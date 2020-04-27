@@ -36,7 +36,7 @@ namespace Shared.Core.Common.Logging
         /// </summary>
         /// <param name="name">A string/identifier that is associated with the logger instances (and that will show up in the log message)</param>
         /// <returns>The instance of the ILogger implementation class</returns>
-        public static ILogger GetLogger(string name) => LogManager.GetLogger(name);
+        //public static ILogger GetLogger(string name) => LogManager.GetLogger(name);
 
         /// <summary>
         /// Returns an instance of the logger implementation, associated with a given type
