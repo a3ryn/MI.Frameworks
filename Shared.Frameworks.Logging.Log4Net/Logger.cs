@@ -24,10 +24,10 @@ namespace Shared.Frameworks.Logging
     {
         protected ILog Logr = null;
 
-        public Logger(string name)
-        {
-            Logr = LogManager.GetLogger(name);
-        }
+        //public Logger(string name)
+        //{
+        //    Logr = LogManager.GetLogger(name);
+        //}
 
         public Logger(Type t)
         {

@@ -10,7 +10,7 @@ namespace Shared.Core.Common.Logging
 {
     public interface ILogManager
     {
-        ILogger GetLogger(string name);
+        //ILogger GetLogger(string name);
         ILogger GetLogger<T>() where T : class;
         ILogger GetLogger(Type t);
         void Shutdown();

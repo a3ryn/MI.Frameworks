@@ -8,9 +8,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
-using System.Data.SqlClient;
+using Microsoft.Data.SqlClient;
 using System.Data;
-using System.Data.EntityClient;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -27,61 +26,77 @@ namespace Shared.Frameworks.DataAccess
     [Export(typeof (IDataAccess))]
     public class DataAdapter : IDataAccess
     {
+        #region Exposing appSettings key usedby this framework, making them discoverable via the API
+        /// <summary>
+        /// AppSettings KEY name for Data Access configuration. Set the value to the NAME of the connection string
+        /// to be used as default, to set up the adapter. 
+        /// The connection string can be overridden for individual Data Access calls as needed, by passing it in to the 
+        /// method call, but if not provided, the Data Adapter (IDataAccess implementation) is going to use 
+        /// the connection string identified by the name specified under this app setting key.
+        /// EF-configured connection strings are not supported. This framework only supports basic connection strings 
+        /// found under  the &lt; connectionStrings &gt; section in the configuration file of the startup project.
+        /// </summary>
+        public const string DA_AppSettings_ConnStrNameKey = "DataAccess.ConnStrName";
+
+        /// <summary>
+        /// AppSettings KEY name for the Data Access configuration. Set the value to the desired SQL timeout for connecting 
+        /// to a given SQL Server instance. If not provided, the default value used is 120 seconds.
+        /// </summary>
+        public const string DA_AppSettings_SqlTimeoutKey = "DataAccess.SQLCommandTimeoutInSeconds";
+
+
+        public const string DA_AppSettings_LogDataBeforeInsertKey = "DataAccess.LogDataBeforeInsert";
+        #endregion
+
         private static class ConfigConstants
         {
             //connection strings can always be passed in with each individual request to the DataAccess framework; these are here in case we consistently go against the same DB
-            static ConfigConstants()
-            {
-                BasicConnStrId = appSettingStr("DataAccess.BasicConnStrName");
-                EfConnStrId = appSettingStr("DataAccess.EfConnStrName");
-            }
-
-            internal static string BasicConnStrId { get; }
-            internal static string EfConnStrId { get; }
-            internal const string SqlConnectionTimeoutId = "SQLCommandTimeoutInSeconds";
+            internal static string BasicConnStrId = appSetting<string>(DA_AppSettings_ConnStrNameKey);
+            internal const string SqlConnectionTimeoutId = DA_AppSettings_SqlTimeoutKey;
         }
 
-        private static readonly string DefaultConnectionStr;
-        private static readonly int SqlCommandTimeout;
-        internal static readonly bool PrintDataBeforeInsert;
+        private string DefaultConnString { get; }
+        private int SqlCommandTimeout { get; }
 
-        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = null;
 
-        static DataAdapter()
+        static DataAdapter() => ResolveLogger();
+
+        public DataAdapter() : this(
+            connString(ConfigConstants.BasicConnStrId),
+            appSetting(ConfigConstants.SqlConnectionTimeoutId, 120))
         {
-            var connStr = connString(ConfigConstants.BasicConnStrId); //basic
+        }
 
-            //see if there isn't an EF-defined connection string:
-            var entityConnectionString = connString(ConfigConstants.EfConnStrId);
+        public DataAdapter(string connectionString, int commandTimeout = 120)
+        {
+            DefaultConnString = connectionString;
+            SqlCommandTimeout = commandTimeout;
+            LogConfig();
+        }
 
-            if (string.IsNullOrEmpty(entityConnectionString))
+        private void LogConfig()
+            => Log?.Debug($"Default Connection String = {DefaultConnString ?? "None configured. Must be provided with every query as input."}. " +
+                $"SQL timeout = {SqlCommandTimeout}s.");
+
+        private static ILogger ResolveLogger()
+        {
+            try
             {
-                if (string.IsNullOrEmpty(connStr))
-                    throw new ApplicationException(
-                        "Missing connection string. No basic connection string with ID 'SystemManager' was found" +
-                        "and not EntityFramework connection string with ID 'Entities' was found either.");
-
-                DefaultConnectionStr = connStr;
+                return LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
             }
-            else
+            catch (Exception e)
             {
-                DefaultConnectionStr = new EntityConnectionStringBuilder(entityConnectionString)
-                    .ProviderConnectionString;
+                Debug.WriteLine($"Logger could not be resolved. Will continue without logging. INitialization exception: {e.Message}");
             }
-
-            SqlCommandTimeout = appSetting(ConfigConstants.SqlConnectionTimeoutId, 120);
-            PrintDataBeforeInsert = appSetting("DataAccess.PrintDataBeforeInsert", false);
-
-            Log.Debug($"Default Connection String = {DefaultConnectionStr}. " +
-                      $"SQL timeout = {SqlCommandTimeout}s." +
-                      $"Print data before insert = {PrintDataBeforeInsert}");
+            return default;
         }
 
         public IEnumerable<T> Get<T>(string query,
             Func<SqlDataReader, T> entityAdapter = null, string connStr = null)
             where T : new()
         {
-            connStr = connStr ?? DefaultConnectionStr;
+            connStr = connStr ?? DefaultConnString;
             IEnumerable<T> result = null;
 
             Execute(() =>
@@ -96,7 +111,7 @@ namespace Shared.Frameworks.DataAccess
                         cmd.CommandTimeout = SqlCommandTimeout;
 
                         result = conn.OpenConnectionAndReadData(entityAdapter, cmd);
-                        Log.Debug($"ExecuteReader() returned {result.Count()} rows of data of type {typeof(T).Name}");
+                        Log?.Debug($"ExecuteReader() returned {result.Count()} rows of data of type {typeof(T).Name}");
                     }
                 }
             }, query, connStr);           
@@ -122,7 +137,7 @@ namespace Shared.Frameworks.DataAccess
             string connStr = null)
             where T : new()
         {
-            connStr = connStr ?? DefaultConnectionStr;
+            connStr = connStr ?? DefaultConnString;
             IEnumerable<T> result = null;
 
             Execute(() =>
@@ -145,209 +160,5 @@ namespace Shared.Frameworks.DataAccess
             }, stProcName, connStr);
             return result;
         }
-    }
-
-    internal static class DataAdapterHelper
-    {
-        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-        #region Helpers
-        internal static void Execute(Action a, string query, string connStr)
-        {
-            Log.Debug($"START Executing query/stproc {query}. ConnStr = {connStr}.");
-            var s = new Stopwatch();
-            s.Start();
-            try
-            {
-                a();
-            }
-            catch (Exception e)
-            {
-                Log.Error($"Exception Executing Query/StProc {query}", e);
-                throw;
-            }
-            finally
-            {
-                s.Stop();
-                Log.Debug($"END  Executing Query/StProc {query}. Time ellapsed: {s.ElapsedMilliseconds} [ms].");
-            }
-        }
-
-        internal static IEnumerable<T> OpenConnectionAndReadData<T>(this IDbConnection conn, Func<SqlDataReader, T> entityAdapter, 
-            SqlCommand cmd, Dictionary<string,SqlDbType> output = null)
-            where T : new()
-        {
-            var result = new List<T>();
-            try
-            {
-                conn.Open();
-
-                using (var reader = cmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        var p = entityAdapter != null
-                            ? entityAdapter(reader)
-                            : reader.MapObject<T>();
-                        if (p != null)
-                        {
-                            result.Add(p);
-                        }
-                    }
-
-                    ProcessOutputValues(cmd, output, result);
-                }
-            }
-            catch (Exception dae)
-            {
-                throw new ApplicationException("Data Access Exception: " + dae.Message, dae);
-            }
-            return result;
-        }
-
-        private static void ProcessOutputValues<T>(SqlCommand cmd, Dictionary<string, SqlDbType> output, List<T> result) where T : new()
-        {
-            if (output != null)
-            {
-                result.AddRange(
-                    cmd.Parameters.Cast<SqlParameter>()
-                        .Where(x => x.Direction == ParameterDirection.Output)
-                        .Select(o => (T) Convert.ChangeType(o.Value, typeof (T)))
-                        .Where(p => p != null));
-            }
-        }
-
-        internal static List<SqlParameter> CreateSqlParameters(
-            string stProcName,
-            IEnumerable<Tuple<string, object, string>> argNamesWithValuesAndType, 
-            IDictionary<string, SqlDbType> outputParams = null)
-        {
-            if (argNamesWithValuesAndType == null)
-                return null;
-
-            var sb = new StringBuilder(stProcName + " ");
-            var sparams = new List<SqlParameter>();
-            var paramAdded = false;
-
-            argNamesWithValuesAndType.ToList().ForEach(t => ProcessParam(t.Item1, t.Item2, ref sb, ref paramAdded, sparams, pStructuredTypeName:t.Item3));
-            if (outputParams == null) return sparams;
-
-            foreach (var oparam in outputParams)
-            {
-                ProcessParam(oparam.Key, null, ref sb, ref paramAdded, sparams, true, dbType:oparam.Value);
-            }
-            return sparams;
-        }
-
-        private static void ProcessParam(
-            string pName, object pValue, 
-            ref StringBuilder sb,
-            ref bool paramAdded,
-            ICollection<SqlParameter> sqlParams,
-            bool isOutput = false,
-            string pStructuredTypeName = null,
-            SqlDbType dbType = SqlDbType.Int)
-        {
-            if (paramAdded)
-                sb.Append(" , ");
-            sb.Append("@");
-            sb.Append(pName);
-
-            var isStructured = !string.IsNullOrEmpty(pStructuredTypeName);
-
-            var sqlParam = isOutput
-                ? new SqlParameter(pName, dbType) {Direction = ParameterDirection.Output}
-                : new SqlParameter(pName, pValue ?? DBNull.Value);
-            if (isStructured)
-            {
-                sqlParam.Value = CreateDataTableForStructuredType(pValue, pStructuredTypeName);
-                sqlParam.TypeName = pStructuredTypeName;
-                sqlParam.SqlDbType = SqlDbType.Structured;
-            }
-            sqlParams.Add(sqlParam);
-            paramAdded = true;
-        }
-
-        private static DataTable CreateDataTableForStructuredType(object data, string typeName) 
-        {
-            //const bool captureSerializedData = true; //set to true only when you want to get the rows to test in SSMS
-
-            
-            if (!(data is IEnumerable))
-            {
-                Log.Warn("Data is not IEnumerable!");
-                return null;
-            }
-          
-            var type = data.GetType().GetGenericArguments().FirstOrDefault();
-            if (type == null) return null;
-            var props =
-                type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    .OrderBy(x => Reflection.GetCustomAttributes<DataMappingAttribute>(x).FirstOrDefault()?.Order ?? 0)
-                    .ToList();
-
-            var result = CreateDataTable(typeName, props);
-            var sdata = PopulateDataTable(data, props, result);
-
-            if (!DataAdapter.PrintDataBeforeInsert) return result;
-
-            LogUdttData(sdata);
-            return result;
-        }
-
-        private static DataTable CreateDataTable(string typeName, List<PropertyInfo> props)
-        {
-            var result = new DataTable(typeName);
-            foreach (var pi in props)
-            {
-                result.Columns.Add(pi.Name, pi.PropertyType);
-            }
-            return result;
-        }
-
-        private static List<string> PopulateDataTable(object data, List<PropertyInfo> props, DataTable result)
-        {
-            var dataEnum = (IEnumerable)data;
-            var sdata = new List<string>();
-            foreach (var d in dataEnum)
-            {
-                object[] vals;
-                try
-                {
-                    vals = props.Select(x => x.GetValue(d, null)).ToArray();
-                    result.Rows.Add(vals);
-                }
-                catch (Exception e)
-                {
-                    Log.Error("Exception building DataTable: " + e.Message);
-                    throw;
-                }
-                if (DataAdapter.PrintDataBeforeInsert)
-                {
-                    sdata.Add(string.Join(",", vals.Select(x => x is string ? $"'{x.ToString()}'" : x?.ToString() ?? "NULL")));
-                }
-            }
-            return sdata;
-        }
-
-        private static void LogUdttData(ICollection<string> sdata)
-        {
-            try
-            {
-                if (sdata.Count == 0)
-                {
-                    throw new ApplicationException("Data to save to the DB is empty");
-                }
-                var s = $"( {string.Join(" ),\n( ", sdata)} )";
-                Log.Debug($"Data to be inserted: \n{s}");
-            }
-            catch (Exception ex) //we could get out of memory exception for very large data sets
-            {
-                Log.Warn(
-                    $"EXCEPTION: Could not log data (UDTT) before calling DB st proc (insert/update). Item count: {sdata.Count}. Exception Reason = {ex.Message}");
-            }
-        }
-
-        #endregion
     }
 }

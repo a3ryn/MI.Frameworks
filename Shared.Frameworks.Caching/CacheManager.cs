@@ -7,6 +7,7 @@ https://opensource.org/licenses/MIT
 using System;
 using System.ComponentModel.Composition;
 using System.Reflection;
+using System.Diagnostics;
 using System.Runtime.Caching;
 using Shared.Core.Common.Caching;
 using Shared.Core.Common.Logging;
@@ -23,7 +24,18 @@ namespace Shared.Frameworks.Caching
     [PartCreationPolicy(CreationPolicy.Shared)] //singleton instance (only one Cache allowed)
     public class CacheManager : ICache
     {
-        private static readonly ILogger Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+        private static readonly ILogger Log = null;
+        static CacheManager()
+        {
+            try
+            {
+                Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+            }
+            catch(Exception ex)
+            {
+                Debug.WriteLine($"No logger implementation found. Will not log details. {ex.Message}");
+            }
+        }
 
         static TimeSpan _defaultExpiration;
         static ObjectCache _cache;
@@ -41,7 +53,7 @@ namespace Shared.Frameworks.Caching
 
             var obj = _cache.GetCacheItem(key);
             if (!(obj?.Value is T)) return default(T);
-            //Log.Debug("Found item in cache. Retrieving from cache item with key " + key);
+            //Log?.Debug("Found item in cache. Retrieving from cache item with key " + key);
             return (T)obj.Value;
         }
 
@@ -61,7 +73,7 @@ namespace Shared.Frameworks.Caching
 
             _cache.Set(cacheItem, policy); //cache item with its policy
 
-            //Log.Debug($"Cached item with key {key} with expiration {expiration.Value}sec");
+            //Log?.Debug($"Cached item with key {key} with expiration {expiration.Value}sec");
         }
 
         public T Remove<T>(string key)
@@ -69,7 +81,7 @@ namespace Shared.Frameworks.Caching
             var obj = Remove(key);
             if (obj is T)
                 return (T)obj;
-            return default(T); //todo is this right? or do we throw an ex?
+            return default; //todo is this right? or do we throw an ex? (make configurable?)
         }
 
         public object Remove(string key)
@@ -93,10 +105,10 @@ namespace Shared.Frameworks.Caching
         }
 
         private static void UpdateCache(CacheEntryUpdateArguments arguments) =>
-            Log.Debug($"{logMsg(CacheAction.Update)} Key={arguments.Key}, Val={arguments.UpdatedCacheItem}");
+            Log?.Debug($"{logMsg(CacheAction.Update)} Key={arguments.Key}, Val={arguments.UpdatedCacheItem}");
 
         private static void RemoveFromCache(CacheEntryRemovedArguments arguments) =>
-            Log.Debug($"{logMsg(CacheAction.Remove)} Reason={arguments.RemovedReason}, ItemKey={arguments.CacheItem.Key}");
+            Log?.Debug($"{logMsg(CacheAction.Remove)} Reason={arguments.RemovedReason}, ItemKey={arguments.CacheItem.Key}");
 
         public T Execute<T>(CacheAction a, string key, T item)
         => (T)del[a](this, key, item);
@@ -117,7 +129,7 @@ namespace Shared.Frameworks.Caching
             [CacheAction.Update] = (c, k, item) => { c.Put(item, k); return item; }
         };
 
-        private static Func<CacheAction, string> logMsg = a => $"Cache {a} event received. CacheEntry{a}Arguments: ";
-        private static Func<CacheAction, IDictionary<string, string>, string> logMsgWithArgs = (a, args) => $"Cache {a} event received. CacheEntry{a}Arguments: {csv(args)}";
+        private static readonly Func<CacheAction, string> logMsg = a => $"Cache {a} event received. CacheEntry{a}Arguments: ";
+        private static readonly Func<CacheAction, IDictionary<string, string>, string> logMsgWithArgs = (a, args) => $"Cache {a} event received. CacheEntry{a}Arguments: {csv(args)}";
     }
 }
