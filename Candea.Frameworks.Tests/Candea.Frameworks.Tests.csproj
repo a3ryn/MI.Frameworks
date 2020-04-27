@@ -1,0 +1,54 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup Label="Globals">
+    <SccProjectName>SAK</SccProjectName>
+    <SccProvider>SAK</SccProvider>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccLocalPath>SAK</SccLocalPath>
+  </PropertyGroup>
+  
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+
+    <IsPackable>false</IsPackable>
+  </PropertyGroup>
+
+
+  <ItemGroup>
+    <EmbeddedResource Include="log4net.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.Extensions.Configuration" Version="3.1.3" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.0.1" />
+    <PackageReference Include="coverlet.collector" Version="1.2.0" />
+    <PackageReference Include="MSTest.TestAdapter" Version="1.4.0" />
+    <PackageReference Include="MSTest.TestFramework" Version="1.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Shared.Core.Common\Shared.Core.Common.csproj" />
+    <ProjectReference Include="..\Shared.Frameworks.Caching\Shared.Frameworks.Caching.csproj" />
+    <ProjectReference Include="..\Shared.Frameworks.DataAccess\Shared.Frameworks.DataAccess.csproj" />
+    <ProjectReference Include="..\Shared.Frameworks.Logging.Log4Net\Shared.Frameworks.Logging.Log4Net.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="App.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="PublishSampleDb.bat">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
+    <None Update="simpleKvpConfig.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+
+</Project>
