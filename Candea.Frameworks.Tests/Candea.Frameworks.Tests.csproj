@@ -45,6 +45,9 @@
     <None Update="PublishSampleDb.bat">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <None Update="simpleKvpConfig.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 

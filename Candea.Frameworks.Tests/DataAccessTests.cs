@@ -9,47 +9,11 @@ using System.Transactions;
 using static Shared.Core.Common.DI.Mef;
 using static Shared.Core.Common.auxfunc;
 using Shared.Core.Common.Logging;
-using Shared.Core.Common.DI;
 using System.Reflection;
+using Shared.Core.Common.DI;
 
 namespace Candea.Frameworks.Tests
 {
-    /// <summary>
-    /// A Class the matches the table structure to use with automatic mapping table-to-type
-    /// One property does not match the column name (Value) so we can use the DataMappingAttribute to
-    /// specify the actual column name that the property maps to.
-    /// </summary>
-    public class NodeProxy
-    {
-        public int Id { get; set; }
-
-        public string Name { get; set; }
-
-        [DataMapping("Value")]
-        public string NodeVal { get; set; }
-
-        public string CreatedBy { get; set; }
-        public DateTime CreatedDate { get; set; }
-        public string UpdatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-    }
-
-    /// <summary>
-    /// Proxy type for UDTT - input to a st proc call
-    /// </summary>
-    public class NodeTypeUdtt
-    {
-        public int? Id { get; set; }
-
-        public string Name { get; set; }
-
-        public string Value { get; set; }
-
-        public string CreatedBy { get; set; }
-        public DateTime? CreatedDate { get; set; }
-        public string UpdatedBy { get; set; }
-        public DateTime? UpdatedDate { get; set; }
-    }
 
     [TestClass]
     public class DataAccessTests
@@ -68,6 +32,9 @@ namespace Candea.Frameworks.Tests
             p.StartInfo = startInfo;
             p.Start();
             p.WaitForExit();
+
+            //reset mef in case the other test classes used it and initialized its static data in a specific way
+            new Mef();
 
             //setup logger (resolve)
             Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

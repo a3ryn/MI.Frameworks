@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿/*
+This source file is under MIT License (MIT)
+Copyright (c) 2020 Mihaela Iridon
+https://opensource.org/licenses/MIT
+*/
+
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Shared.Core.Common.Serialization;
 using System;
@@ -10,14 +16,22 @@ using System.Reflection;
 
 namespace Shared.Core.Common.Config
 {
+    /// <summary>
+    /// Implementation of IAppSettings contract.
+    /// Reference used: https://github.com/0xCM/z0/tree/master/src/seed/config
+    /// </summary>
     public class AppSettings : IAppSettings
     {
+        /// <summary>
+        /// Name of JSON appsettings file used by this implementation, 
+        /// in absence of other specific files passed as input to implemented methods
+        /// </summary>
         public const string DefaultConfigFile = "appsettings.json";
 
         protected IEnumerable<KeyValuePair<string, string>> kvpSettings;
 
         public AppSettings(IEnumerable<IAppSetting> settings = null)
-        {    
+        {
             kvpSettings =
                 settings == null
                 ? new KeyValuePair<string, string>[] { }
@@ -136,7 +150,7 @@ namespace Shared.Core.Common.Config
                 var v = Setting(name);
                 return (T)Convert.ChangeType(v, typeof(T));
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 System.Diagnostics.Debug.WriteLine($"Conversion error: {e.Message}");
             }

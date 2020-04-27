@@ -17,7 +17,7 @@ namespace Shared.Core.Common.DI
     using static Extensions.Reflection;
     using static auxfunc;
 
-    public static class Mef
+    public class Mef
     {
         #region Exposing appSettings key usedby this framework, making them discoverable via the API
         /// <summary>
@@ -36,10 +36,19 @@ namespace Shared.Core.Common.DI
         public const string MEF_ConfigFileName = "mefSettings.json";
         #endregion
 
-        private static readonly string DefaultPath;
-        private static readonly string[] SearchPatterns;
+        private static string DefaultPath;
+        private static string[] SearchPatterns;
 
-        static Mef()
+        static Mef() => Init();
+        public Mef() => Init();
+
+        public Mef(string assembliesPath, string csvSearchPatterns )
+        {
+            DefaultPath = assembliesPath ?? executingAssemblyDir();
+            SearchPatterns = csvSearchPatterns?.Split(',');
+        }
+
+        internal static void Init()
         {
             var settings = AppSettings.FromFile<MefConfig>(File.Exists(MEF_ConfigFileName) ? MEF_ConfigFileName : null, "mef");
             if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
@@ -56,11 +65,6 @@ namespace Shared.Core.Common.DI
                     SearchPatterns = kvpSettings[MEF_ConfigFileName]?.Split(',');
                 }
             }
-
-            //var configuredPathToScan = appSetting<string>(MEF_AppSettings_AssembliesPathKey);
-            //DefaultPath = configuredPathToScan ?? executingAssemblyDir();
-            //var searchPatterns = appSetting<string>(MEF_AppSettings_CsvSearchPatternsKey);
-            //SearchPatterns = searchPatterns?.Split(',');
         }
 
         /// <summary>
@@ -148,21 +152,21 @@ namespace Shared.Core.Common.DI
             Debug.WriteLine($"MEF resolve execution time for loading type {typeof(T).Name} = {sw.ElapsedMilliseconds}ms");
             return result;
         }
-        
+
 
         private static T GetValueFromCatalog<T>(AggregateCatalog catalog, out CompositionContainer container, string exportName = null)
         {
             //using (var container = new CompositionContainer(catalog))
             container = new CompositionContainer(catalog);
             //{
-                var export = exportName == null ? container.GetExport<T>() : container.GetExport<T>(exportName);
-                if (export == null)
-                {
-                    var path = string.Join(",", catalog.Catalogs.Where(x => x is DirectoryCatalog).Cast<DirectoryCatalog>().Select(x => x.FullPath));
-                    throw new ApplicationException($"MEF: Implementation for type {typeof(T).Name} not found. " +
-                                                   $"Full Path(s)={path}; exportName={exportName}");
-                }
-                return export.Value;
+            var export = exportName == null ? container.GetExport<T>() : container.GetExport<T>(exportName);
+            if (export == null)
+            {
+                var path = string.Join(",", catalog.Catalogs.Where(x => x is DirectoryCatalog).Cast<DirectoryCatalog>().Select(x => x.FullPath));
+                throw new ApplicationException($"MEF: Implementation for type {typeof(T).Name} not found. " +
+                                               $"Full Path(s)={path}; exportName={exportName}");
+            }
+            return export.Value;
             //}
             //the container will be disposed if only if T or the realization of T does not implement IDisposable
         }
