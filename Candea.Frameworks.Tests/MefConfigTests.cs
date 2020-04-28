@@ -48,7 +48,16 @@ namespace Candea.Frameworks.Tests
             }
         }
 
-        protected static void ValidateNonPublicStaticFieldValue(Type t, string fieldName, object expectedFieldValue, Func<object,object> fieldValueAdapter = null)
+        /// <summary>
+        /// Validates some static non-public field on some type, checking its value (or some processed value of that) 
+        /// against some expected value provided in the input of this method call. Using <see cref="System.Reflection"/>.
+        /// </summary>
+        /// <param name="t">The type containing the static non-public field to be validated</param>
+        /// <param name="fieldName">The name of the static non-public field</param>
+        /// <param name="expectedFieldValue">The expected value to assert the reflected value against.</param>
+        /// <param name="fieldValueAdapter">An optional delegate that will transform the retrieved field value and prepare it for comparison with expected value.</param>
+        protected static void ValidateNonPublicStaticFieldValue(Type t, string fieldName, 
+            object expectedFieldValue, Func<object,object> fieldValueAdapter = null)
         {
             var f1 = t.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
             Assert.IsNotNull(f1, "Field name or accessibility was changed!");
@@ -117,7 +126,7 @@ namespace Candea.Frameworks.Tests
             var csvSearchPatterns = (val: "pat31.*,pat32.*,pat33.*", fieldName: "SearchPatterns");
 
             //Act
-            new Mef(assembliesPath.val, csvSearchPatterns.val); //init with params; static CTOR was not yet invoked
+            new Mef(assembliesPath.val, csvSearchPatterns.val); //init with params; (will reset static data if any was already initialized via the static CTOR)
 
             //Assert
             ValidateMefConfiguration(assembliesPath, csvSearchPatterns);
@@ -130,7 +139,7 @@ namespace Candea.Frameworks.Tests
             var assembliesPath = (val: "/abc4", fieldName: "DefaultPath");
             var csvSearchPatterns = (val: "pat4.*", fieldName: "SearchPatterns");
 
-            //Act - try resolve some assembly only to invoke static CTOR to read from config file values other than what is above
+            //Act - try resolve some contract, but only to invoke static CTOR to read from config file values other than what is above
             try
             {
                 Mef.Resolve<IComparable>(); //will fail
@@ -140,6 +149,12 @@ namespace Candea.Frameworks.Tests
 
             //Assert
             ValidateMefConfiguration(assembliesPath, csvSearchPatterns);
+        }
+
+        [TestMethod]
+        public void InitMefFromXMLAppSettings()
+        {
+            //TODO
         }
 
         private static void ValidateMefConfiguration((string val, string fieldName) assembliesPath, (string val, string fieldName) csvSearchPatterns)
@@ -152,8 +167,6 @@ namespace Candea.Frameworks.Tests
             //csvSearchPatterns
             ValidateNonPublicStaticFieldValue(typeof(Mef), csvSearchPatterns.fieldName, csvSearchPatterns.val,
                 v => string.Join(",", v as string[]));
-        }
-
-        
+        }       
     }
 }

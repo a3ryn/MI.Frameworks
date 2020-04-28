@@ -1,0 +1,10 @@
+{
+  "caching": {
+    "expiration": {
+      "Days": 0,
+      "Hours": 24,
+      "Minutes": 0,
+      "Seconds": 0
+    }
+  }
+}

@@ -19,6 +19,11 @@ using static Shared.Core.Common.corefunc;
 
 namespace Shared.Frameworks.DataAccess
 {
+    /// <summary>
+    /// Utility class for object translations.
+    /// A: from rows and columns, as retrieved from the DB (using <see cref="SqlDataReader"/>) to a (generic) strongly typed instance.
+    /// B: from an array of strongly typed instances to a UDTT proxy, for stored proc calls that use UDTTs as input
+    /// </summary>
     internal static class EntityMapper
     {
         static EntityMapper()

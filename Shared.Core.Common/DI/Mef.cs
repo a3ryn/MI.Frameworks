@@ -70,7 +70,7 @@ namespace Shared.Core.Common.DI
 
         private static void Init()
         {
-            var settings = AppSettings.FromFile<MefConfig>(File.Exists(MEF_ConfigFileName) ? MEF_ConfigFileName : null, "mef");
+            var settings = AppSettings.FromFile<MefConfig>(MEF_ConfigFileName, "mef");
             if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
             {
                 DefaultPath = settings.AssebliesPath ?? executingAssemblyDir();

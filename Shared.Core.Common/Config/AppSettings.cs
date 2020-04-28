@@ -87,9 +87,12 @@ namespace Shared.Core.Common.Config
         /// <returns>An instance of the configuration POCO with properties populated from the deserialized JSON file</returns>
         public static T FromFile<T>(string filePath = DefaultConfigFile, string section = null, JsonSerializerSettings jsonSettings = null)
         {
-            filePath = filePath ?? DefaultConfigFile;
+            filePath = 
+                filePath == null || !File.Exists(filePath)
+                ? DefaultConfigFile
+                : filePath;
 
-            if (File.Exists(filePath))
+            if (File.Exists(filePath)) //just in case DefaultConfigFile still does not exist
             {
                 var str = File.ReadAllText(filePath);
 

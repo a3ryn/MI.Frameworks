@@ -25,7 +25,7 @@ namespace Shared.Frameworks.DataAccess
     [Export(typeof (IDataAccess))]
     public class DataAdapter : IDataAccess
     {
-        #region Exposing appSettings key usedby this framework, making them discoverable via the API
+        #region Exposing appSettings key and other data usedby this framework, making them discoverable via the API
         /// <summary>
         /// XML AppSettings KEY name for Data Access configuration. Set the value to the NAME of the connection string
         /// to be used as default, to set up the adapter. 
@@ -91,7 +91,7 @@ namespace Shared.Frameworks.DataAccess
 
         private static void Init()
         {
-            var settings = AppSettings.FromFile<DataAccessConfig>(File.Exists(DA_ConfigFileName) ? DA_ConfigFileName : null, "dataAccess");
+            var settings = AppSettings.FromFile<DataAccessConfig>(DA_ConfigFileName, "dataAccess");
             if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
             {
                 DefaultConnString = settings.DefaultConnStr;
