@@ -11,12 +11,13 @@ using static Shared.Core.Common.auxfunc;
 using Shared.Core.Common.Logging;
 using System.Reflection;
 using Shared.Core.Common.DI;
+using System.IO;
 
 namespace Candea.Frameworks.Tests
 {
 
     [TestClass]
-    public class DataAccessTests
+    public class DataAccessTests : TestBase
     {
         [ClassInitialize]
         public static void SetupClass(TestContext context)
@@ -33,7 +34,7 @@ namespace Candea.Frameworks.Tests
             p.Start();
             p.WaitForExit();
 
-            //reset mef in case the other test classes used it and initialized its static data in a specific way
+            //reset mef (settings) in case the other test classes used it and initialized its static data in a specific way
             new Mef();
 
             //setup logger (resolve)
@@ -56,13 +57,31 @@ namespace Candea.Frameworks.Tests
         [TestInitialize]
         public void Setup()
         {
-            var connStrName = appSetting<string>(DataAdapter.DA_AppSettings_ConnStrNameKey);
+            var dbName = "Candea.SampleDb";
+            var sqlCmdTimeout = 125; //overriding default to validate loading of config
+            var logBeforeInsert = true; //same
+
+            var dataAccessConfigJsonText =
+                $@"{{
+                ""dataAccess"": {{
+                    ""defaultConnStr"": ""Data Source=localhost; Database = {dbName}; Integrated Security = true"",
+                    ""sqlCommandTimeout"": {sqlCmdTimeout},
+                    ""logDataBeforeInsert"":  {logBeforeInsert.ToString().ToLower()}
+                    }}
+                }}";
+
+            File.WriteAllText(DataAdapter.DA_ConfigFileName, dataAccessConfigJsonText);
+
+            var connStrName = appSetting<string>(DataAdapter.DA_XmlAppSettings_ConnStrNameKey);
             Assert.IsNotNull(connStrName);
 
             //resolve Data Access implementation
             adapter = Resolve<IDataAccess>(pattern: "Shared.*"); //pattern is optional but recommended, to avoid loading/reflecting over 3rd party DLLs
             if (adapter == null)
                 Assert.Fail("Could not initialize adapter. No implementation found!");
+
+            ValidateNonPublicStaticFieldValue(typeof(DataAdapter), "SqlCommandTimeout", sqlCmdTimeout);
+            ValidateNonPublicStaticFieldValue(typeof(DataAdapter), "LogDataBeforeInsert", logBeforeInsert);
         }
 
         IDataAccess adapter = null;

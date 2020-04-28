@@ -1,0 +1,7 @@
+{
+  "dataAccess": {
+    "defaultConnStr": "<Enter ConnStr>",
+    "sqlCommandTimeout": 120,
+    "logDataBeforeInsert": false
+  }
+}

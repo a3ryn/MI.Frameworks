@@ -16,30 +16,14 @@ using System.Text;
 using Shared.Core.Common.DataAccess;
 using Shared.Core.Common.Logging;
 using Shared.Core.Common.Extensions;
-using static Shared.Core.Common.auxfunc;
 
 namespace Shared.Frameworks.DataAccess
 {
     internal static class DataAdapterHelper
     {
-        static DataAdapterHelper()
-        {
-            try
-            {
-                Log = LogResolver.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-            }
-            catch(Exception e)
-            {
-                Debug.WriteLine($"No logger found. Will execute without logging. {e.Message}");
-            }
-            
-            PrintDataBeforeInsert = appSetting(DataAdapter.DA_AppSettings_LogDataBeforeInsertKey, false);
-            Log?.Debug($"Setting {DataAdapter.DA_AppSettings_LogDataBeforeInsertKey} = {PrintDataBeforeInsert}");
-        }
 
-        private static readonly bool PrintDataBeforeInsert;
-
-        private static readonly ILogger Log;
+        private static readonly bool PrintDataBeforeInsert = DataAdapter.LogDataBeforeInsert;
+        private static readonly ILogger Log = DataAdapter.Log;
 
         #region Helpers
         internal static void Execute(Action a, string query, string connStr)

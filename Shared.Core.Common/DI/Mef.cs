@@ -21,18 +21,23 @@ namespace Shared.Core.Common.DI
     {
         #region Exposing appSettings key usedby this framework, making them discoverable via the API
         /// <summary>
-        /// AppSetting key to use with MEF framework; set the value to the folder location where 
+        /// XML AppSetting key to use with MEF framework; set the value to the folder location where 
         /// the framework should search for implementation assemblies for resolution.
         /// </summary>
-        public const string MEF_AppSettings_AssembliesPathKey = "MEF.AssembliesPath";
+        public const string MEF_XmlAppSettings_AssembliesPathKey = "MEF.AssembliesPath";
 
         /// <summary>
-        /// AppSetting key to use with MEF framework; set the value to a comma-separated string
+        /// XML AppSetting key to use with MEF framework; set the value to a comma-separated string
         /// of patterns representing assembly names to search for resolution (filter criteria).
         /// Example: "MyNamespace.*,Shared.Frameworks.*"
         /// </summary>
-        public const string MEF_AppSettings_CsvSearchPatternsKey = "MEF.CsvSearchPatterns";
+        public const string MEF_XmlAppSettings_CsvSearchPatternsKey = "MEF.CsvSearchPatterns";
 
+        /// <summary>
+        /// If provided, this is the name of the JSON configuration file that is used to initialize
+        /// the MEF-based DI framework provided by this package. Otherwise, the JSON settings for MEF
+        /// can also be included in the project's appsettings.json file, as a section keyed as "mef".
+        /// </summary>
         public const string MEF_ConfigFileName = "mefSettings.json";
         #endregion
 
@@ -40,15 +45,30 @@ namespace Shared.Core.Common.DI
         private static string[] SearchPatterns;
 
         static Mef() => Init();
+
+        /// <summary>
+        /// Instance default CTOR provided only as a mechanism to "reset" the Mef utility, or to
+        /// force it to re-initialize (re-read) its configuration settings. 
+        /// Usually, for a given project, these settings will all be the same for the lifetime of
+        /// the application and do not need to change. This CTOR was primarily used for testing.
+        /// </summary>
         public Mef() => Init();
 
+        /// <summary>
+        /// If needed, this Mef-based DI framework can be initialized using the instance CTOR
+        /// with the settings parameters provided as input. It will override the settings read
+        /// in the static CTOR from configuration file(s). As with the default instance CTOR,
+        /// this is not the normal usage of this framework.
+        /// </summary>
+        /// <param name="assembliesPath"></param>
+        /// <param name="csvSearchPatterns"></param>
         public Mef(string assembliesPath, string csvSearchPatterns )
         {
             DefaultPath = assembliesPath ?? executingAssemblyDir();
             SearchPatterns = csvSearchPatterns?.Split(',');
         }
 
-        internal static void Init()
+        private static void Init()
         {
             var settings = AppSettings.FromFile<MefConfig>(File.Exists(MEF_ConfigFileName) ? MEF_ConfigFileName : null, "mef");
             if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
@@ -61,7 +81,7 @@ namespace Shared.Core.Common.DI
                 var kvpSettings = AppSettings.FromFile(); //reads either the default JSON config file (KVPs) or the XML AppSettings
                 if (kvpSettings != null)
                 {
-                    DefaultPath = kvpSettings[MEF_AppSettings_AssembliesPathKey] ?? executingAssemblyDir();
+                    DefaultPath = kvpSettings[MEF_XmlAppSettings_AssembliesPathKey] ?? executingAssemblyDir();
                     SearchPatterns = kvpSettings[MEF_ConfigFileName]?.Split(',');
                 }
             }

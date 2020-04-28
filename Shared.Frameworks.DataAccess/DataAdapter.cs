@@ -5,30 +5,29 @@ https://opensource.org/licenses/MIT
 */
 
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel.Composition;
 using Microsoft.Data.SqlClient;
 using System.Data;
+using System.IO;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Shared.Core.Common.DataAccess;
 using Shared.Core.Common.Logging;
-using Shared.Core.Common.Extensions;
 using static Shared.Core.Common.auxfunc;
 
 namespace Shared.Frameworks.DataAccess
 {
     using static DataAdapterHelper;
+    using Core.Common.Config;
 
     [Export(typeof (IDataAccess))]
     public class DataAdapter : IDataAccess
     {
         #region Exposing appSettings key usedby this framework, making them discoverable via the API
         /// <summary>
-        /// AppSettings KEY name for Data Access configuration. Set the value to the NAME of the connection string
+        /// XML AppSettings KEY name for Data Access configuration. Set the value to the NAME of the connection string
         /// to be used as default, to set up the adapter. 
         /// The connection string can be overridden for individual Data Access calls as needed, by passing it in to the 
         /// method call, but if not provided, the Data Adapter (IDataAccess implementation) is going to use 
@@ -36,48 +35,80 @@ namespace Shared.Frameworks.DataAccess
         /// EF-configured connection strings are not supported. This framework only supports basic connection strings 
         /// found under  the &lt; connectionStrings &gt; section in the configuration file of the startup project.
         /// </summary>
-        public const string DA_AppSettings_ConnStrNameKey = "DataAccess.ConnStrName";
+        public const string DA_XmlAppSettings_ConnStrNameKey = "DataAccess.ConnStrName";
 
         /// <summary>
-        /// AppSettings KEY name for the Data Access configuration. Set the value to the desired SQL timeout for connecting 
+        /// XML AppSettings KEY name for the Data Access configuration. Set the value to the desired SQL timeout for connecting 
         /// to a given SQL Server instance. If not provided, the default value used is 120 seconds.
         /// </summary>
-        public const string DA_AppSettings_SqlTimeoutKey = "DataAccess.SQLCommandTimeoutInSeconds";
+        public const string DA_XmlAppSettings_SqlTimeoutKey = "DataAccess.SQLCommandTimeoutInSeconds";
 
+        /// <summary>
+        /// XML AppSettings KEY name for the Data Access configuration. Set the value to TRUE to print to log the input data 
+        /// (in case of structured/UDTT) to stored procedures. If not configured, default value used is false.
+        /// </summary>
+        public const string DA_XmlAppSettings_LogDataBeforeInsertKey = "DataAccess.LogDataBeforeInsert";
 
-        public const string DA_AppSettings_LogDataBeforeInsertKey = "DataAccess.LogDataBeforeInsert";
+        /// <summary>
+        /// Default name of the connection string to be used by this framework globally, when not overridden in specific method calls.
+        /// If using XML application settings, to use a different identifier for the connection string, set the ConnStrName configuration value accordingly.
+        /// For JSOn configuration (appsettings.json or the dedicated dataAccessSettings.json, the actual connection string is configured under 'defaultConnStr'.
+        /// </summary>
+        public const string DA_XMLAppSettings_DefaultConnStringName = "Default";
+
+        /// <summary>
+        /// Name of the dedicated JSON configuration file used by the framework, if this file exists. It will be searched for first, then
+        /// the global appsettings.json, and finally the XML app.config file.
+        /// </summary>
+        public const string DA_ConfigFileName = "dataAccessSettings.json";
         #endregion
 
-        private static class ConfigConstants
+
+        private static string DefaultConnString;
+        private static int SqlCommandTimeout = 120;
+        internal static bool LogDataBeforeInsert;
+
+        internal static readonly ILogger Log = null;
+
+        static DataAdapter()
         {
-            //connection strings can always be passed in with each individual request to the DataAccess framework; these are here in case we consistently go against the same DB
-            internal static string BasicConnStrId = appSetting<string>(DA_AppSettings_ConnStrNameKey);
-            internal const string SqlConnectionTimeoutId = DA_AppSettings_SqlTimeoutKey;
+            Log = ResolveLogger();
         }
 
-        private string DefaultConnString { get; }
-        private int SqlCommandTimeout { get; }
-
-        private static readonly ILogger Log = null;
-
-        static DataAdapter() => ResolveLogger();
-
-        public DataAdapter() : this(
-            connString(ConfigConstants.BasicConnStrId),
-            appSetting(ConfigConstants.SqlConnectionTimeoutId, 120))
+        public DataAdapter()
         {
+            Init();
+            LogConfig();
         }
 
-        public DataAdapter(string connectionString, int commandTimeout = 120)
+        public DataAdapter(string connectionString, int commandTimeout = 120, bool logDateBeforeInsert = false)
         {
             DefaultConnString = connectionString;
             SqlCommandTimeout = commandTimeout;
+            LogDataBeforeInsert = logDateBeforeInsert;
             LogConfig();
+        }
+
+        private static void Init()
+        {
+            var settings = AppSettings.FromFile<DataAccessConfig>(File.Exists(DA_ConfigFileName) ? DA_ConfigFileName : null, "dataAccess");
+            if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
+            {
+                DefaultConnString = settings.DefaultConnStr;
+                SqlCommandTimeout = settings.SqlCommandTimeout;
+                LogDataBeforeInsert = settings.LogDataBeforeInsert;
+            }
+            else //no json file with MEF config was found; trying to retrieve from XML AppSettings section, if any
+            {
+                DefaultConnString = connString(appSetting(DA_XmlAppSettings_ConnStrNameKey, DA_XMLAppSettings_DefaultConnStringName));
+                SqlCommandTimeout = appSetting(DA_XmlAppSettings_SqlTimeoutKey, 120);
+                LogDataBeforeInsert = appSetting(DA_XmlAppSettings_LogDataBeforeInsertKey, false);               
+            }
         }
 
         private void LogConfig()
             => Log?.Debug($"Default Connection String = {DefaultConnString ?? "None configured. Must be provided with every query as input."}. " +
-                $"SQL timeout = {SqlCommandTimeout}s.");
+                $"SQL timeout = {SqlCommandTimeout} sec. Log input data (for insert) = {LogDataBeforeInsert}.");
 
         private static ILogger ResolveLogger()
         {

@@ -68,9 +68,9 @@ namespace Candea.Frameworks.Tests
 
             //find mef settings in AppSettings section of app.config of this project
             //NOTE: invidiual settings are accessed the same way regardless where they were loaded from (JSON, XML-AppSettings)
-            var mef_assembliesPath = settings[Mef.MEF_AppSettings_AssembliesPathKey];
+            var mef_assembliesPath = settings[Mef.MEF_XmlAppSettings_AssembliesPathKey];
             Assert.IsFalse(string.IsNullOrWhiteSpace(mef_assembliesPath));
-            var mef_csvSearchPattern = settings[Mef.MEF_AppSettings_CsvSearchPatternsKey];
+            var mef_csvSearchPattern = settings[Mef.MEF_XmlAppSettings_CsvSearchPatternsKey];
             Assert.IsFalse(string.IsNullOrWhiteSpace(mef_csvSearchPattern));
         }
 
