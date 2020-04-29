@@ -1,5 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shared.Core.Common.DI;
+using Shared.Core.Common.Serialization;
 using System;
 using System.IO;
 
@@ -15,7 +16,7 @@ namespace Candea.Frameworks.Tests
             var assembliesPath = "/abc1";
             var csvSearchPatterns = "pat11.*,pat12.*";
 
-            var mefSettingsText = $@"{{""mef"": {{ ""assebliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}  }}";
+            var mefSettingsText = $@"{{""mef"": {{ ""assembliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}  }}";
 
             File.WriteAllText(Mef.MEF_ConfigFileName, mefSettingsText);
 
@@ -32,7 +33,7 @@ namespace Candea.Frameworks.Tests
             var assembliesPath = "/abc2";
             var csvSearchPatterns = "pat21.*,pat22.*";
 
-            var mefSettingsText = $@"""mef"": {{ ""assebliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}";
+            var mefSettingsText = $@"""mef"": {{ ""assembliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}";
 
             var appSettingsJsonNewText = //create a new appsettings.json file that has mef settings as a section inside, to use for deserialization
                 $@"{{
@@ -114,6 +115,42 @@ namespace Candea.Frameworks.Tests
         {
             Mef.Resolve<IComparable>();
         }
+
+
+
+        [TestMethod]
+        public void LoadFromAppSettingsJsonSection2()
+        {
+            var assembliesPath = "bin/Debug/netcore3.0";
+            var csvSearchPatterns = "Shared.*";
+
+            var mefSettingsText = $@"""mef"": {{ ""assembliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}";
+
+            var appSettingsJsonNewText = //create a new appsettings.json file that has mef settings as a section inside, to use for deserialization
+                $@"{{
+                      ""key1"": ""val1"",
+                      ""key2"": 200,
+                      ""key3"":  true,
+                      {mefSettingsText},
+                      ""key4"": {{ ""k41"": ""v41"", ""k42"": ""v42""  }}
+                    }}";
+
+
+            File.WriteAllText(settingsFile, appSettingsJsonNewText); //overwrite if exists
+            File.Delete(Mef.MEF_ConfigFileName); //delete mef-dedicated json config file
+
+            //Act
+            new Mef(); //only for testing; not the usual way of using this; this is to force Init() and reading configuration settings from wherever provided
+            try
+            {
+                Mef.Resolve<IComparable>();
+            }
+            catch { }
+
+            //Assert
+            ValidateMefConfiguration(assembliesPath, csvSearchPatterns);
+        }
+
 
         private static void ValidateMefConfiguration(string assembliesPath, string csvSearchPatterns)
         {

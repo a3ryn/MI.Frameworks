@@ -15,7 +15,7 @@ namespace Shared.Core.Common.DI
         /// The path where implementation assemblies are to be searched.
         /// Default is current executing folder.
         /// </summary>
-        public string AssebliesPath { get; set; } = ".";
+        public string AssembliesPath { get; set; } = ".";
 
         /// <summary>
         /// Configuration setting Used for filtering implementation assemblies

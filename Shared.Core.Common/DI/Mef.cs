@@ -73,7 +73,7 @@ namespace Shared.Core.Common.DI
             var settings = AppSettings.FromFile<MefConfig>(MEF_ConfigFileName, "mef");
             if (settings != null) //this means deserialization of JSON content or section succeeded and the POCO is populated
             {
-                DefaultPath = settings.AssebliesPath ?? executingAssemblyDir();
+                DefaultPath = settings.AssembliesPath ?? executingAssemblyDir();
                 SearchPatterns = settings.CsvSearchPatterns?.Split(',');
             }
             else //no json file with MEF config was found; trying to retrieve from XML AppSettings section, if any
