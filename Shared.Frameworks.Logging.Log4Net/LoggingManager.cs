@@ -12,6 +12,7 @@ using static Shared.Core.Common.auxfunc;
 using static log4net.Config.XmlConfigurator;
 using System.ComponentModel.Composition;
 using System.Reflection;
+using Shared.Core.Common.Config;
 
 namespace Shared.Frameworks.Logging
 {
@@ -21,8 +22,7 @@ namespace Shared.Frameworks.Logging
     [Export(typeof(ILogManager))]
     public class LoggingManager : ILogManager, IDisposable
     {
-        internal static readonly bool RunOnSeparateThread = false;
-
+        #region Exposing appSettings key and other data usedby this framework, making them discoverable via the API
         /// <summary>
         /// AppSetting key name to use for configuring this logging framework and to override defaults.
         /// Set the value for this key to be TRUE if you want the logging activity to be executed on a separate thread.
@@ -43,15 +43,63 @@ namespace Shared.Frameworks.Logging
         /// </summary>
         public const string Logging_AppSetting_HeaderStringKey = "Logging.Header";
 
+        /// <summary>
+        /// Name of the dedicated JSON configuration file used by the framework, if this file is provided (it is optional).
+        /// The framework will lookup configuration in this file first, then in appSettings.json, and finally in the
+        /// appSettings section of the old-style XML app.config file.
+        /// </summary>
+        public const string Logging_ConfigFileName = "logSettings.json";
+        #endregion
+
+        internal static bool RunOnSeparateThread = false;
+        private static string Header = LogConfig.DefaultHeader;
+        private static string Log4netConfigFilePath = LogConfig.DefaultLog4netConfigPath;
+
+
         static LoggingManager()
         {
-            var header = appSetting(Logging_AppSetting_HeaderStringKey, "_____________ START _____________");
-            var configFileName = appSetting(Logging_AppSetting_ConfigFilePathKey, "log4net.config");
+            
+        }
 
-            RunOnSeparateThread = appSetting(Logging_AppSettings_RunOnSeparateThreadKey, true);
+        public LoggingManager()
+        {
+            Init(); //init configuration only
+
+            InitLog4Net(); 
+        }
+
+        public LoggingManager(string header, string log4netConfigFilePath, bool runOnSeparateThread = true)
+        {
+            //ignore/override configuration
+            RunOnSeparateThread = runOnSeparateThread;
+            Header = header ?? LogConfig.DefaultHeader;
+            Log4netConfigFilePath = log4netConfigFilePath ?? LogConfig.DefaultLog4netConfigPath;
+
+            InitLog4Net();
+        }
+       
+        private static void Init()
+        {
+            var settings = AppSettings.FromFile<LogConfig>(Logging_ConfigFileName, "log");
+            if (settings != null)
+            {
+                RunOnSeparateThread = settings.RunOnSeparateThread;
+                Header = settings.Header;
+                Log4netConfigFilePath = settings.Log4netConfigPath;
+            }
+            else //read from XML AppSettings, if any
+            {
+                RunOnSeparateThread = appSetting(Logging_AppSettings_RunOnSeparateThreadKey, true);
+                Header = appSetting(Logging_AppSetting_HeaderStringKey, LogConfig.DefaultHeader);
+                Log4netConfigFilePath = appSetting(Logging_AppSetting_ConfigFilePathKey, LogConfig.DefaultLog4netConfigPath);
+            }
+        }
+
+        private static void InitLog4Net()
+        {
             try
             {
-                var configFile = new FileInfo(Path.Combine(Environment.CurrentDirectory,configFileName));
+                var configFile = new FileInfo(Log4netConfigFilePath);
                 var logRepository = log4net.LogManager.GetRepository(Assembly.GetEntryAssembly() ?? Assembly.GetExecutingAssembly());
                 if (configFile.Exists)
                 {
@@ -60,17 +108,16 @@ namespace Shared.Frameworks.Logging
                 else
                     Configure(logRepository);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 WriteLine($"ERROR: Could not initialize logging: {e.Message}", e);
                 return;
             }
 
-            _localLogger = log4net.LogManager.GetLogger(typeof(LoggingManager));
-            _localLogger.Info(header);
-            _localLogger.Debug($"Logging messages on separate thread={RunOnSeparateThread}");
+            logger = log4net.LogManager.GetLogger(typeof(LoggingManager));
+            logger.Info(Header);
+            logger.Debug($"Logging messages on separate thread={RunOnSeparateThread}");
         }
-       
 
         //public static ILogger Logger(string name) => new Logger(name) as ILogger;
         //public ILogger GetLogger(string name) => Logger(name);
@@ -86,11 +133,11 @@ namespace Shared.Frameworks.Logging
         public void Dispose() => ShutdownLogger();
 
 
-        private static readonly log4net.ILog _localLogger;
+        private static log4net.ILog logger;
 
         private static void LogAndShutdownLogger()
         {
-            _localLogger.Info(">>>>> Shutting down log4net Logger. BYE.");
+            logger.Info(">>>>> Shutting down log4net Logger. BYE.");
             log4net.LogManager.Shutdown();
         }
     }

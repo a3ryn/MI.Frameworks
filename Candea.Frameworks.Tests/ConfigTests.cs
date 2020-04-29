@@ -6,17 +6,13 @@ using System.Linq;
 
 namespace Candea.Frameworks.Tests
 {
-    using static ConfigFileNames;
-
-    internal static class ConfigFileNames
-    {
-        internal const string settingsFile = "appsettings.json";
-        internal const string simpleKvpFile = "simpleKvpConfig.json";
-    }
-
+    
     [TestClass]
     public class GeneralConfigTests
     {
+        private static readonly string settingsFile = TestBase.settingsFile;
+        internal const string simpleKvpFile = "simpleKvpConfig.json";
+
         [TestMethod]
         public void ReadStructureJsonConfigAsSimpleKvp()
         {

@@ -1,19 +1,13 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shared.Core.Common.DI;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Shared.Frameworks.Caching;
 using Shared.Core.Common.Caching;
 using System.Threading;
 
 namespace Candea.Frameworks.Tests
 {
-    using static ConfigFileNames;
-
     [TestClass]
     public class CachingTests : TestBase
     {
@@ -22,12 +16,6 @@ namespace Candea.Frameworks.Tests
         {
             new Mef();
         }
-
-        //[TestInitialize]
-        //public void Setup()
-        //{
-        //    new Mef(); //reset, just in case           
-        //}
 
         private static string BuildCachingJsonConfigString(TimeSpan expiration)
             => $@"""caching"": {{
@@ -165,7 +153,7 @@ namespace Candea.Frameworks.Tests
         }
 
         [TestMethod]
-        public void InitCacheWithMefAndJsonConfigAndTestExpiration()
+        public void InitCacheWithMefAndJsonConfigAndTestExpirationOfCachedValue()
         {
             //Arrange
             var expiration = new TimeSpan(0, 0, 2); //2 seconds for cache to hold a value

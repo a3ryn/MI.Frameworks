@@ -82,7 +82,7 @@ namespace Shared.Core.Common.DI
                 if (kvpSettings != null)
                 {
                     DefaultPath = kvpSettings[MEF_XmlAppSettings_AssembliesPathKey] ?? executingAssemblyDir();
-                    SearchPatterns = kvpSettings[MEF_ConfigFileName]?.Split(',');
+                    SearchPatterns = kvpSettings[MEF_XmlAppSettings_CsvSearchPatternsKey]?.Split(',');
                 }
             }
         }

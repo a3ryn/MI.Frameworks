@@ -1,74 +1,10 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Shared.Core.Common.DI;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Reflection;
-using Shared.Frameworks.DataAccess;
 
 namespace Candea.Frameworks.Tests
 {
-    using static ConfigFileNames;
-
-    public abstract class TestBase
-    {
-        //appsettings.json file of this project does not have mef settings in it; these unit tests will add/remove such settings
-        //but it assumes that the appsettings.json was not modified manually to add these mef settings.
-        protected static readonly string ExistingAppSettingsJsonText =
-            File.Exists(settingsFile)
-                ? File.ReadAllText(settingsFile)
-                : null;
-
-        protected static readonly string ExistingMefSettingsJsonText =
-            File.Exists(Mef.MEF_ConfigFileName)
-                ? File.ReadAllText(Mef.MEF_ConfigFileName)
-                : null;
-
-        protected static readonly string ExistingDataAccessSettingsJsonText =
-            File.Exists(DataAdapter.DA_ConfigFileName)
-                ? File.ReadAllText(DataAdapter.DA_ConfigFileName)
-                : null;
-
-
-        [TestCleanup]
-        public void Cleanup() =>
-            RestoreConfigFile(
-                    new[]
-                    {
-                        (settingsFile, ExistingAppSettingsJsonText),
-                        (Mef.MEF_ConfigFileName, ExistingMefSettingsJsonText)
-                });
-
-        private static void RestoreConfigFile(IEnumerable<(string filePath, string text)> filesWithContentToRestore)
-        {
-            foreach ((string filePath, string text) in filesWithContentToRestore)
-            {
-                if (text != null) //only when it is truly not null do we restore, even it is an empty string
-                    File.WriteAllText(filePath, text);
-            }
-        }
-
-        /// <summary>
-        /// Validates some static non-public field on some type, checking its value (or some processed value of that) 
-        /// against some expected value provided in the input of this method call. Using <see cref="System.Reflection"/>.
-        /// </summary>
-        /// <param name="t">The type containing the static non-public field to be validated</param>
-        /// <param name="fieldName">The name of the static non-public field</param>
-        /// <param name="expectedFieldValue">The expected value to assert the reflected value against.</param>
-        /// <param name="fieldValueAdapter">An optional delegate that will transform the retrieved field value and prepare it for comparison with expected value.</param>
-        protected static void ValidateNonPublicStaticFieldValue(Type t, string fieldName, 
-            object expectedFieldValue, Func<object,object> fieldValueAdapter = null)
-        {
-            var f1 = t.GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Static);
-            Assert.IsNotNull(f1, "Field name or accessibility was changed!");
-
-            var actualValue = fieldValueAdapter == null 
-                ? f1.GetValue(null) 
-                : fieldValueAdapter(f1.GetValue(null));
-            Assert.AreEqual(expectedFieldValue, actualValue);
-        }
-    }
-
     [TestClass]
     public class MefConfigTests : TestBase
     {
@@ -76,10 +12,10 @@ namespace Candea.Frameworks.Tests
         public void LoadMefFromDedicatedMefSettingsJsonFile()
         {
             //Arrange
-            var assembliesPath = (val: "/abc1", fieldName: "DefaultPath");
-            var csvSearchPatterns = (val: "pat11.*,pat12.*", fieldName: "SearchPatterns");
+            var assembliesPath = "/abc1";
+            var csvSearchPatterns = "pat11.*,pat12.*";
 
-            var mefSettingsText = $@"{{""mef"": {{ ""assebliesPath"": ""{assembliesPath.val}"", ""csvSearchPatterns"": ""{csvSearchPatterns.val}"" }}  }}";
+            var mefSettingsText = $@"{{""mef"": {{ ""assebliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}  }}";
 
             File.WriteAllText(Mef.MEF_ConfigFileName, mefSettingsText);
 
@@ -93,10 +29,10 @@ namespace Candea.Frameworks.Tests
         [TestMethod]
         public void LoadFromAppSettingsJsonSection()
         {
-            var assembliesPath = (val: "/abc2", fieldName: "DefaultPath");
-            var csvSearchPatterns = (val: "pat21.*,pat22.*", fieldName: "SearchPatterns");
+            var assembliesPath = "/abc2";
+            var csvSearchPatterns = "pat21.*,pat22.*";
 
-            var mefSettingsText = $@"""mef"": {{ ""assebliesPath"": ""{assembliesPath.val}"", ""csvSearchPatterns"": ""{csvSearchPatterns.val}"" }}";
+            var mefSettingsText = $@"""mef"": {{ ""assebliesPath"": ""{assembliesPath}"", ""csvSearchPatterns"": ""{csvSearchPatterns}"" }}";
 
             var appSettingsJsonNewText = //create a new appsettings.json file that has mef settings as a section inside, to use for deserialization
                 $@"{{
@@ -122,11 +58,11 @@ namespace Candea.Frameworks.Tests
         public void InitMefWithInstanceCtorWithParameters()
         {
             //Arrange
-            var assembliesPath = (val: "/abc3", fieldName: "DefaultPath");
-            var csvSearchPatterns = (val: "pat31.*,pat32.*,pat33.*", fieldName: "SearchPatterns");
+            var assembliesPath = "/abc3";
+            var csvSearchPatterns = "pat31.*,pat32.*,pat33.*";
 
             //Act
-            new Mef(assembliesPath.val, csvSearchPatterns.val); //init with params; (will reset static data if any was already initialized via the static CTOR)
+            new Mef(assembliesPath, csvSearchPatterns); //init with params; (will reset static data if any was already initialized via the static CTOR)
 
             //Assert
             ValidateMefConfiguration(assembliesPath, csvSearchPatterns);
@@ -136,8 +72,8 @@ namespace Candea.Frameworks.Tests
         public void InitMefWithInstanceCtorWithParametersAfterStaticCtorInitFromConfigFile()
         {
             //Arrange
-            var assembliesPath = (val: "/abc4", fieldName: "DefaultPath");
-            var csvSearchPatterns = (val: "pat4.*", fieldName: "SearchPatterns");
+            var assembliesPath = "/abc4";
+            var csvSearchPatterns = "pat4.*";
 
             //Act - try resolve some contract, but only to invoke static CTOR to read from config file values other than what is above
             try
@@ -145,7 +81,7 @@ namespace Candea.Frameworks.Tests
                 Mef.Resolve<IComparable>(); //will fail
             }
             catch { }
-            new Mef(assembliesPath.val, csvSearchPatterns.val); //init with params that override what the static ctor set above
+            new Mef(assembliesPath, csvSearchPatterns); //init with params that override what the static ctor set above
 
             //Assert
             ValidateMefConfiguration(assembliesPath, csvSearchPatterns);
@@ -154,18 +90,33 @@ namespace Candea.Frameworks.Tests
         [TestMethod]
         public void InitMefFromXMLAppSettings()
         {
-            //TODO
+            //Arrange: delete all custom JSON config files
+            if (File.Exists(Mef.MEF_ConfigFileName))
+                File.Delete(Mef.MEF_ConfigFileName);
+            if (File.Exists(settingsFile))
+                File.Delete(settingsFile);
+            new Mef();//reset configuration (from previous use) - force read from app.config (xml)
+
+            //Act
+            try
+            {
+                Mef.Resolve<IComparable>(); //will fail
+            }
+            catch { }
+
+            //Assert
+            ValidateMefConfiguration(".", "Shared.*");
         }
 
-        private static void ValidateMefConfiguration((string val, string fieldName) assembliesPath, (string val, string fieldName) csvSearchPatterns)
+        private static void ValidateMefConfiguration(string assembliesPath, string csvSearchPatterns)
         {
             //check the two properties (private static readonly) via reflection:
 
             //assemblies path (simple string)
-            ValidateNonPublicStaticFieldValue(typeof(Mef), assembliesPath.fieldName, assembliesPath.val);
+            ValidateNonPublicStaticFieldValue(typeof(Mef), "DefaultPath", assembliesPath);
 
             //csvSearchPatterns
-            ValidateNonPublicStaticFieldValue(typeof(Mef), csvSearchPatterns.fieldName, csvSearchPatterns.val,
+            ValidateNonPublicStaticFieldValue(typeof(Mef), "SearchPatterns", csvSearchPatterns,
                 v => string.Join(",", v as string[]));
         }       
     }

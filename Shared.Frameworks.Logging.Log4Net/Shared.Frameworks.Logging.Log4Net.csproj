@@ -38,4 +38,12 @@
     <ProjectReference Include="..\Shared.Core.Common\Shared.Core.Common.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="logSettings.json">
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
