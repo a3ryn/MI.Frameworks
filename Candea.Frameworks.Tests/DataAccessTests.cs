@@ -52,6 +52,9 @@ namespace Candea.Frameworks.Tests
 
             //stop logger if exists
             LogResolver.CloseLogger();
+
+            if (Directory.Exists("log"))
+                Directory.Delete("log", true);
         }
 
         [TestInitialize]

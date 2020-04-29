@@ -108,6 +108,13 @@ namespace Candea.Frameworks.Tests
             ValidateMefConfiguration(".", "Shared.*");
         }
 
+        [TestMethod]
+        [ExpectedException(typeof(ApplicationException))]
+        public void TestExportNotFoundExpectingException()
+        {
+            Mef.Resolve<IComparable>();
+        }
+
         private static void ValidateMefConfiguration(string assembliesPath, string csvSearchPatterns)
         {
             //check the two properties (private static readonly) via reflection:

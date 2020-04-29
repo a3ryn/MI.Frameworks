@@ -56,11 +56,6 @@ namespace Shared.Frameworks.Logging
         private static string Log4netConfigFilePath = LogConfig.DefaultLog4netConfigPath;
 
 
-        static LoggingManager()
-        {
-            
-        }
-
         public LoggingManager()
         {
             Init(); //init configuration only
