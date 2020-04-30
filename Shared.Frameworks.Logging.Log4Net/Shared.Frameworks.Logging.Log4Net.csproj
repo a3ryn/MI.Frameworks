@@ -23,11 +23,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="log4net.config" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="log4net.config" />
+    <Content Include="log4net.config">
+      <Pack>true</Pack>
+      <PackageCopyToOutput>true</PackageCopyToOutput>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
@@ -39,11 +39,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="logSettings.json">
+    <Content Update="logSettings.json">
       <Pack>true</Pack>
       <PackageCopyToOutput>true</PackageCopyToOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>

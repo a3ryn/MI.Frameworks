@@ -49,7 +49,7 @@ namespace Shared.Frameworks.DataAccess
 
         internal static IEnumerable<T> OpenConnectionAndReadData<T>(this IDbConnection conn, Func<SqlDataReader, T> entityAdapter, 
             SqlCommand cmd, Dictionary<string,SqlDbType> output = null)
-            where T : new()
+            //where T : new()
         {
             var result = new List<T>();
             try
@@ -79,7 +79,8 @@ namespace Shared.Frameworks.DataAccess
             return result;
         }
 
-        private static void ProcessOutputValues<T>(SqlCommand cmd, Dictionary<string, SqlDbType> output, List<T> result) where T : new()
+        private static void ProcessOutputValues<T>(SqlCommand cmd, Dictionary<string, SqlDbType> output, List<T> result) 
+            //where T : new()
         {
             if (output != null)
             {
@@ -96,19 +97,47 @@ namespace Shared.Frameworks.DataAccess
             IEnumerable<Tuple<string, object, string>> argNamesWithValuesAndType, 
             IDictionary<string, SqlDbType> outputParams = null)
         {
-            if (argNamesWithValuesAndType == null)
+            if (argNamesWithValuesAndType == null && outputParams == null)
                 return null;
 
             var sb = new StringBuilder(stProcName + " ");
             var sparams = new List<SqlParameter>();
             var paramAdded = false;
 
-            argNamesWithValuesAndType.ToList().ForEach(t => ProcessParam(t.Item1, t.Item2, ref sb, ref paramAdded, sparams, pStructuredTypeName:t.Item3));
+            if (argNamesWithValuesAndType != null)
+                argNamesWithValuesAndType.ToList().ForEach(t => ProcessParam(t.Item1, t.Item2, ref sb, ref paramAdded, sparams, pStructuredTypeName:t.Item3));
+           
             if (outputParams == null) return sparams;
-
             foreach (var oparam in outputParams)
             {
                 ProcessParam(oparam.Key, null, ref sb, ref paramAdded, sparams, true, dbType:oparam.Value);
+            }
+            return sparams;
+        }
+
+        internal static List<SqlParameter> CreateSqlParameters(
+            string stProcName,
+            IEnumerable<(string paramName, object udttItems, string udttTypeName)> udttInputs = null,
+            Dictionary<string, object> simpleInputs = null,
+            IDictionary<string, SqlDbType> outputParams = null)
+        {
+            if (udttInputs == null && simpleInputs == null && outputParams == null)
+                return null;
+
+            var sb = new StringBuilder(stProcName + " ");
+            var sparams = new List<SqlParameter>();
+            var paramAdded = false;
+
+            if (udttInputs != null)
+                udttInputs.ToList().ForEach(t => ProcessParam(t.paramName, t.udttItems, ref sb, ref paramAdded, sparams, pStructuredTypeName: t.udttTypeName));
+            
+            if (simpleInputs != null)
+                simpleInputs.ToList().ForEach(t => ProcessParam(t.Key, t.Value, ref sb, ref paramAdded, sparams));
+
+            if (outputParams == null) return sparams;
+            foreach (var oparam in outputParams)
+            {
+                ProcessParam(oparam.Key, null, ref sb, ref paramAdded, sparams, true, dbType: oparam.Value);
             }
             return sparams;
         }

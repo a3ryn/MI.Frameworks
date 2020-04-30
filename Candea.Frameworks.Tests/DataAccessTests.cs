@@ -193,9 +193,70 @@ namespace Candea.Frameworks.Tests
         }
 
         [TestMethod]
-        public void DeleteNodes()
+        [DataRow("alpha")]
+        [DataRow(null)]
+        public void AddAndDeleteNodesWithStProcCallAndUdttInput(string userName)
         {
-            //TODO
+            //Arrange
+            var simpleImput = new List<(string name, string val)>
+            {
+                ("Alpha", "val1"),
+                ("Beta", "val2"),
+                ("Gamma", "val3")
+            };
+            var createdby = "test";
+
+            var inputForAdd = simpleImput.Select(x => new NodeTypeUdtt
+            {
+                Name = x.name,
+                Value = x.val,
+                CreatedBy = createdby,
+            }).ToList();
+
+
+            var retrieveQueryWithTVFAfterAdd = 
+                $"select * from cfg.GetNodes() where [Name] in " +
+                $"('{string.Join("', '", simpleImput.Select(x => x.name))}')";
+            string retrieveQueryWithTVFAfterDelete(IEnumerable<int> ids) => 
+                $"select * from cfg.GetNodes() where [Id] in ({string.Join(", ", ids)})";
+
+            using (var ts = new TransactionScope())
+            {
+                //Act - ADD
+                adapter.ExecStProcWithStructuredType<object>("cfg.AddOrUpdateNodes", new List<Tuple<string, object, string>>
+                {
+                    //a single UDTT input param to the st proc with param name: @nodes and of type cfg.NodeType
+                    new Tuple<string, object, string>("nodes", inputForAdd, "cfg.NodeType")
+                });
+
+                //Assert - ADD
+                var result = adapter.Get<NodeProxy>(retrieveQueryWithTVFAfterAdd); //automatic translation to NodeProxy elements
+                Assert.IsNotNull(result);
+                Assert.IsTrue(result.Count() == 3); //the newly inserted record 
+
+                Assert.IsTrue(result.All(x => x.CreatedBy == createdby));
+                Assert.IsFalse(result.Select(x => x.Name).Except(simpleImput.Select(x => x.name)).Any());
+                Assert.IsFalse(inputForAdd.Select(x => x.Name).Except(simpleImput.Select(x => x.name)).Any());
+
+                //Act - DELETE
+                //prepare IDs in UDDT of type dbo.IntVal (expected as input to the delete st proc)
+                var inputForDelete = result.Select(x => new { x.Id }).ToList(); //UDTT is a simple list of int values (using anonymous type with inferred property name "Id")
+                adapter.ExecStProcWithMixedTypes<object>("cfg.DeleteNodes", 
+                    new List<(string, object, string)>
+                    {
+                        //a single UDTT input param to the st proc with param name: @nodeIds and of type dbo.IntVal
+                        ("nodeIds", inputForDelete, "dbo.IntVal")
+                    },
+                    new Dictionary<string, object>
+                    {
+                        ["user"] = userName
+                    });
+
+                //Assert - DELETE
+                result = adapter.Get<NodeProxy>(retrieveQueryWithTVFAfterDelete(inputForDelete.Select(x => x.Id))); //automatic translation to NodeProxy elements
+                Assert.IsNotNull(result);
+                Assert.IsTrue(result.Count() == (userName == null ? 3 : 0)); //nothing is deleted when user name input is null
+            }
         }
     }
 }

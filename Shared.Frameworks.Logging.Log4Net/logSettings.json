@@ -2,6 +2,6 @@
   "log": {
     "header": "____ START ____",
     "log4netConfigPath": "log4net.config",
-    "runOnSeparateThread": true
+    "runOnSeparateThread": false
   }
 }

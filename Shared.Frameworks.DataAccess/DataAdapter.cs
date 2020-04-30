@@ -125,7 +125,7 @@ namespace Shared.Frameworks.DataAccess
 
         public IEnumerable<T> Get<T>(string query,
             Func<SqlDataReader, T> entityAdapter = null, string connStr = null)
-            where T : new()
+            //where T : new()
         {
             connStr = connStr ?? DefaultConnString;
             IEnumerable<T> result = null;
@@ -154,26 +154,69 @@ namespace Shared.Frameworks.DataAccess
             Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
-            where T : new() =>
-        
-            ExecStProcWithStructuredType(stProcName,
+            //where T : new() 
+            => ExecStProcWithStructuredType(stProcName,
                 input.Select(kv => new Tuple<string, object, string>(kv.Key, kv.Value, null)),
                 output, entityAdapter, connStr);
-        
+
 
         public IEnumerable<T> ExecStProcWithStructuredType<T>(string stProcName,
             IEnumerable<Tuple<string, object, string>> input,
             Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
             string connStr = null)
-            where T : new()
+            //where T : new()
+            => ExecStProc(stProcName,
+                () => CreateSqlParameters(stProcName, input, output),
+                output, entityAdapter, connStr);
+        //{
+        //    connStr = connStr ?? DefaultConnString;
+        //    IEnumerable<T> result = null;
+
+        //    Execute(() =>
+        //    {
+        //        var sqlParams = CreateSqlParameters(stProcName, input, output);
+
+        //        using (var conn = new SqlConnection(connStr))
+        //        {
+        //            using (var spcmd = new SqlCommand(stProcName, conn))
+        //            {
+
+        //                spcmd.CommandType = CommandType.StoredProcedure;
+        //                if (sqlParams != null)
+        //                    spcmd.Parameters.AddRange(sqlParams.ToArray());
+        //                spcmd.CommandTimeout = SqlCommandTimeout;
+
+        //                result = conn.OpenConnectionAndReadData(entityAdapter, spcmd, output);
+        //            }
+        //        }
+        //    }, stProcName, connStr);
+        //    return result;
+        //}
+
+        public IEnumerable<T> ExecStProcWithMixedTypes<T>(string stProcName,
+            IEnumerable<(string paramName, object udttItems, string udttTypeName)> udttInputs = null,
+            Dictionary<string, object> simpleInputs = null,
+            Dictionary<string, SqlDbType> output = null,
+            Func<SqlDataReader, T> entityAdapter = null,
+            string connStr = null)
+            => ExecStProc(stProcName,
+                () => CreateSqlParameters(stProcName, udttInputs, simpleInputs, output),
+                output, entityAdapter, connStr);
+
+
+        private IEnumerable<T> ExecStProc<T>(string stProcName,
+            Func<List<SqlParameter>> paramDelegate,
+            Dictionary<string, SqlDbType> output = null,
+            Func<SqlDataReader, T> entityAdapter = null,
+            string connStr = null)
         {
             connStr = connStr ?? DefaultConnString;
             IEnumerable<T> result = null;
 
             Execute(() =>
             {
-                var sqlParams = CreateSqlParameters(stProcName, input, output);
+                var sqlParams = paramDelegate();
 
                 using (var conn = new SqlConnection(connStr))
                 {

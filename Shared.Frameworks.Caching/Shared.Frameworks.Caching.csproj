@@ -31,11 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="cachingSettings.json">
+    <Content Update="cachingSettings.json">
       <Pack>true</Pack>
       <PackageCopyToOutput>true</PackageCopyToOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>

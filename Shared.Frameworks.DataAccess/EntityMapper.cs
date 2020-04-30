@@ -50,7 +50,10 @@ namespace Shared.Frameworks.DataAccess
         private const string TranslationError =
             "[{0} translation level]: Could not translate property associated with column {1}.";
 
-        internal static T MapObject<T>(this SqlDataReader reader, Dictionary<Guid, List<Tuple<object, string>>> navProps = null, Dictionary<string, SqlDbType> output = null) where T : new()
+        internal static T MapObject<T>(this SqlDataReader reader, 
+            //Dictionary<Guid, List<Tuple<object, string>>> navProps = null, 
+            Dictionary<string, SqlDbType> output = null) 
+            //where T : new()
         {
             var entity = CreateInstance<T>();
 
@@ -91,7 +94,7 @@ namespace Shared.Frameworks.DataAccess
             return entity;
         }
 
-        internal static T MapObject<T>(this DataRow dataRow) where T : new()
+        internal static T MapObject<T>(this DataRow dataRow) //where T : new()
         {
             var entity = CreateInstance<T>();
 
@@ -104,7 +107,9 @@ namespace Shared.Frameworks.DataAccess
                 for (var columnIndex = 0; columnIndex < numberOfColumns; columnIndex++)
                 {
                     var kvp = 
-                        new KeyValuePair<string, object>(dataRow.Table.Columns[columnIndex].ColumnName, dataRow[columnIndex]);
+                        new KeyValuePair<string, object>(
+                            dataRow.Table.Columns[columnIndex].ColumnName, 
+                            dataRow[columnIndex]);
                     var columnName = kvp.Key;
                     var val = kvp.Value;
 
@@ -123,7 +128,7 @@ namespace Shared.Frameworks.DataAccess
             return InvokeGenericMethod(t, nameof(CreateInstance), new object[] { });
         }
 
-        private static T CreateInstance<T>() where T : new()
+        private static T CreateInstance<T>() //where T : new()
         {
             var entity = default(T);
             var t = typeof (T);
@@ -139,7 +144,7 @@ namespace Shared.Frameworks.DataAccess
             return entity;
         }
 
-        private static void SavePropertyInfosToMap<T>(Type t) where T : new()
+        private static void SavePropertyInfosToMap<T>(Type t) //where T : new()
         {
             var propertyInfoMap = new ConcurrentDictionary<string, PropertyInfo>(StringComparer.InvariantCultureIgnoreCase);
             iter(t.GetProperties(), pi =>
@@ -161,17 +166,21 @@ namespace Shared.Frameworks.DataAccess
             return genericMethod.Invoke(null, objects);
         }
 
-        private static bool CheckAndProcessScalarOutput<T>(SqlDataReader reader, Dictionary<string, SqlDbType> output, string outputColumnName,
-    int numberOfColumns, out T entity) where T : new()
+        private static bool CheckAndProcessScalarOutput<T>(SqlDataReader reader, 
+            Dictionary<string, SqlDbType> output, 
+            string outputColumnName,
+            int numberOfColumns, 
+            out T entity) 
+            //where T : new()
         {
-            entity = default(T);
+            entity = default;
             var kvp = GetColumnNameAndValue(reader, 0);
             if ((string.IsNullOrEmpty(outputColumnName) ||
                  !kvp.Key.Equals(outputColumnName, StringComparison.CurrentCultureIgnoreCase)) &&
                 (output != null || numberOfColumns != 1))
                 return false;
             var val = kvp.Value;
-            entity = (val is T) ? (T)val : default(T);
+            entity = (val is T) ? (T)val : default;
             return true;
         }
 
@@ -184,8 +193,10 @@ namespace Shared.Frameworks.DataAccess
                     : null);
         }
 
-        private static void TrySetPropertyUsingConvert<T>(IReadOnlyDictionary<string, PropertyInfo> propertyInfos, string columnName, object val, T entity)
-            where T : new()
+        private static void TrySetPropertyUsingConvert<T>(
+            IReadOnlyDictionary<string, PropertyInfo> propertyInfos, 
+            string columnName, object val, T entity)
+            //where T : new()
         {
             try
             {
@@ -194,7 +205,6 @@ namespace Shared.Frameworks.DataAccess
                 var targetType = propertyInfo.PropertyType;
                 if (val == DBNull.Value)
                 {
-                    //propertyInfos[columnName].SetValue(entity, default(T), null);
                     return;
                 }
 
@@ -209,7 +219,7 @@ namespace Shared.Frameworks.DataAccess
                     propertyVal = (Type)sourceType.GetProperty("UnderlyingSystemType").GetValue(val, null);
                 else if (targetType != sourceType)
                 {
-                    System.Diagnostics.Debug.WriteLine($"Conversion needed for column {columnName}");
+                    WriteLine($"Conversion needed for column {columnName}");
                     propertyVal = Convert.ChangeType(val, targetType);
                 }
                 propertyInfos[columnName].SetValue(entity, propertyVal, null);

@@ -31,11 +31,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="dataAccessSettings.json">
+    <Content Update="dataAccessSettings.json">
       <Pack>true</Pack>
       <PackageCopyToOutput>true</PackageCopyToOutput>
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
+    </Content>
   </ItemGroup>
 
 </Project>

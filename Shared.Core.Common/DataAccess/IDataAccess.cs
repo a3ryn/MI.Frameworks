@@ -23,7 +23,7 @@ namespace Shared.Core.Common.DataAccess
         /// <returns></returns>
         IEnumerable<T> Get<T>(string query,  //query can be a SQL query, including a call to a TVF or a st proc
             Func<SqlDataReader, T> entityAdapter = null,
-            string connStr = null) where T : new();
+            string connStr = null);// where T : new();
 
         /// <summary>
         /// Adapter for calling a stored procedure - that returns (or not) some result (possibly a data set) as well as output parameters (optionally)
@@ -35,11 +35,11 @@ namespace Shared.Core.Common.DataAccess
         /// <param name="entityAdapter">Optional translation delegate</param>
         /// <param name="connStr">The DB connection string (if other than the one provided in the configuration file of the running application)</param>
         /// <returns></returns>
-        IEnumerable<T> ExecStProc<T>(string stProcName, 
-            Dictionary<string, object> input, 
+        IEnumerable<T> ExecStProc<T>(string stProcName,
+            Dictionary<string, object> input,
             Dictionary<string, SqlDbType> output = null,
-            Func<SqlDataReader, T> entityAdapter = null, 
-            string connStr = null) where T : new();
+            Func<SqlDataReader, T> entityAdapter = null,
+            string connStr = null);//where T : new();
 
         /// <summary>
         /// Adapter for calling a stored procedure that takes as input a data set in the form of a UDTT - given as an enumeration of tuples.
@@ -57,7 +57,15 @@ namespace Shared.Core.Common.DataAccess
             IEnumerable<Tuple<string, object, string>> input,
             Dictionary<string, SqlDbType> output = null,
             Func<SqlDataReader, T> entityAdapter = null,
-            string connStr = null)
-            where T : new();
+            string connStr = null);
+            //where T : new();
+
+        IEnumerable<T> ExecStProcWithMixedTypes<T>(string stProcName,
+            IEnumerable<(string paramName, object udttItems, string udttTypeName)> udttInputs = null,
+            Dictionary<string, object> simpleInputs = null,
+            Dictionary<string, SqlDbType> output = null,
+            Func<SqlDataReader, T> entityAdapter = null,
+            string connStr = null);
+            //where T : new();
     }
 }
