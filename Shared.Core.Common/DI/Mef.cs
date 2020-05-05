@@ -10,7 +10,6 @@ using System.ComponentModel.Composition.Hosting;
 using System.Diagnostics;
 using System.Reflection;
 using Shared.Core.Common.Config;
-using System.IO;
 
 namespace Shared.Core.Common.DI
 {
